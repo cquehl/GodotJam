@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="GodotJam"
-config/features=PackedStringArray("4.5", "Mobile")
+config/features=PackedStringArray("4.4", "Mobile")
 run/main_scene="res://scenes/title_screen.tscn"
 config/icon="res://icon.svg"
 
