@@ -6,41 +6,27 @@ on:
   workflow_dispatch:
 
 env:
-  GODOT_VERSION: "4.5"
   GAME_NAME: "minijam"
 
 jobs:
   export-web:
     runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Godot
-        uses: chickensoft-games/setup-godot@v2
-        with:
-          version: 4.5.0
-          use-dotnet: false
-          include-templates: true
-
-      - name: Verify Godot
-        run: godot --version
+      - name: Setup templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.5.stable
+          cp -r /root/.local/share/godot/export_templates/4.5.stable/* ~/.local/share/godot/export_templates/4.5.stable/
 
       - name: Import project
         run: |
           cd godot-jam
           godot --headless --import
-
-      - name: Debug export setup
-        run: |
-          echo "=== Export templates location ==="
-          ls -la ~/.local/share/godot/export_templates/ || echo "No templates dir"
-          ls -la ~/.local/share/godot/export_templates/4.5.stable/ || echo "No 4.5 templates"
-          echo "=== Export presets ==="
-          cat godot-jam/export_presets.cfg
-          echo "=== List presets ==="
-          cd godot-jam && godot --headless --list-export-presets 2>&1 || true
 
       - name: Create export directory
         run: mkdir -p build/web
@@ -48,8 +34,7 @@ jobs:
       - name: Export to Web
         run: |
           cd godot-jam
-          godot --headless --export-release "Web" ../build/web/index.html 2>&1
-          ls -la ../build/web/
+          godot --headless --export-release "Web" ../build/web/index.html
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
