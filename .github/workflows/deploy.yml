@@ -25,16 +25,22 @@ jobs:
           relative_project_path: ./godot-jam
           archive_output: false
 
+      - name: Copy build to workspace
+        run: |
+          mkdir -p build/web
+          cp -r ${{ steps.export.outputs.build_directory }}/Web/* build/web/
+          ls -la build/web/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: ${{ steps.export.outputs.build_directory }}/Web
+          path: build/web
 
       - name: Deploy to itch.io
         uses: robpc/itchio-upload-action@v1
         with:
-          path: ${{ steps.export.outputs.build_directory }}/Web
+          path: build/web
           project: ${{ secrets.ITCH_USER }}/${{ env.GAME_NAME }}
           channel: html5
           api-key: ${{ secrets.ITCH_API_KEY }}
