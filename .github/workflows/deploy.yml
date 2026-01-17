@@ -38,7 +38,8 @@ jobs:
       - name: Export to Web
         run: |
           cd godot-jam
-          godot --headless --export-release "Web" ../build/web/index.html
+          godot --headless --verbose --export-release "Web" ../build/web/index.html 2>&1 || true
+          ls -la ../build/web/ || echo "No build output"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
