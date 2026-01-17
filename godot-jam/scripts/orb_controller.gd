@@ -21,8 +21,8 @@ func _on_settings_changed() -> void:
 	_update_visuals()
 
 func _update_plane_size() -> void:
-	var width := GameManager.plane_radius * 2.0
-	var height := GameManager.plane_radius * 2.0 * GameManager.vertical_squash
+	var width: float = GameManager.plane_radius * 2.0
+	var height: float = GameManager.plane_radius * 2.0 * GameManager.vertical_squash
 	plane.size = Vector2(width, height)
 
 	var viewport_size := get_viewport_rect().size
@@ -37,8 +37,8 @@ func _process(delta: float) -> void:
 	if input.length() > 1.0:
 		input = input.normalized()
 
-	var half_width := GameManager.plane_radius
-	var half_height := GameManager.plane_radius * GameManager.vertical_squash
+	var half_width: float = GameManager.plane_radius
+	var half_height: float = GameManager.plane_radius * GameManager.vertical_squash
 
 	shadow_normalized.x += input.x * GameManager.move_speed * delta / half_width
 	shadow_normalized.y += input.y * GameManager.move_speed * delta / half_height
@@ -66,8 +66,8 @@ func _process(delta: float) -> void:
 
 func _update_visuals() -> void:
 	var plane_center := plane.position + plane.size / 2.0
-	var half_width := GameManager.plane_radius
-	var half_height := GameManager.plane_radius * GameManager.vertical_squash
+	var half_width: float = GameManager.plane_radius
+	var half_height: float = GameManager.plane_radius * GameManager.vertical_squash
 
 	var shadow_pixels := Vector2(
 		shadow_normalized.x * half_width,
@@ -75,7 +75,7 @@ func _update_visuals() -> void:
 	)
 
 	# Total height = base + jump offset
-	var total_height := GameManager.orb_base_height + jump_offset
+	var total_height: float = GameManager.orb_base_height + jump_offset
 	var orb_pixels := shadow_pixels + Vector2(0, -total_height)
 	orb.position = plane_center + orb_pixels - orb.size / 2.0
 
@@ -83,7 +83,7 @@ func _update_visuals() -> void:
 	var plane_shader := plane.material as ShaderMaterial
 	if plane_shader:
 		plane_shader.set_shader_parameter("orb_pos", shadow_normalized)
-		var normalized_height := total_height / half_height
+		var normalized_height: float = total_height / half_height
 		plane_shader.set_shader_parameter("orb_height", normalized_height)
-		var normalized_radius := (orb.size.x * 0.5) / half_width
+		var normalized_radius: float = (orb.size.x * 0.5) / half_width
 		plane_shader.set_shader_parameter("orb_radius", normalized_radius)
