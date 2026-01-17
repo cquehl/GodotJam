@@ -17,23 +17,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Export Web
+        id: export
         uses: firebelley/godot-export@v7.0.0
         with:
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           relative_project_path: ./godot-jam
-          archive_output: true
+          archive_output: false
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: /home/runner/.local/share/godot/builds/
+          path: ${{ steps.export.outputs.build_directory }}/Web
 
       - name: Deploy to itch.io
         uses: robpc/itchio-upload-action@v1
         with:
-          path: /home/runner/.local/share/godot/builds/
+          path: ${{ steps.export.outputs.build_directory }}/Web
           project: ${{ secrets.ITCH_USER }}/${{ env.GAME_NAME }}
           channel: html5
           api-key: ${{ secrets.ITCH_API_KEY }}
