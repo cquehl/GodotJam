@@ -10,3 +10,10 @@ figure out what to do w/ jumping mechanic, maybe thers a long roller that crosse
 export as html to itch.io -- I read C# in godot might not support web export ...
 itch site markdown for MiniJam #50
 Credit https://godotshaders.com/shader/stylized-botw-fire/ for the fire animation
+
+----
+update score UI - can't see it
+when clicking spacebar to start, let the user know game is loading imedieatly then load the game (takes about 7 seconds to load they need instant feedback)
+figure out loading, maybe pre load?
+
+get a giant barrage if you hit 20? or maybe randomly? one too big to jump over

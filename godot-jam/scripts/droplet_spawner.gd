@@ -18,7 +18,10 @@ func _ready() -> void:
 	GameManager.score_changed.connect(_on_score_changed)
 
 func _on_score_changed(new_score: int) -> void:
-	if new_score >= 7:
+	if new_score >= 10:
+		var count := 6 if randi() % 2 == 0 else 8
+		_spawn_targeted_barrage(count)
+	elif new_score >= 7:
 		# Fire multiple targeted large droplets (3 or 5) with 1 second apart
 		var count := 3 if randi() % 2 == 0 else 5
 		_spawn_targeted_barrage(count)
@@ -71,6 +74,9 @@ func _reset_timer() -> void:
 	next_spawn_time = randf_range(spawn_interval_min, spawn_interval_max)
 
 func _spawn_droplet() -> void:
+	if GameManager.score >=15:
+		_spawn_targeted_droplet()
+	
 	var droplet = droplet_scene.instantiate()
 	add_child(droplet)
 
