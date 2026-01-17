@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3 uid="uid://dff12345game"]
+
+[ext_resource type="Script" uid="uid://r54balrcgtuo" path="res://scripts/orb_controller.gd" id="1_orb_ctrl"]
+[ext_resource type="Shader" uid="uid://lt7la1fiee5a" path="res://shaders/plane.gdshader" id="2_plane_shader"]
+[ext_resource type="Shader" uid="uid://bpxey4os2nqv3" path="res://shaders/orb.gdshader" id="3_orb_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_plane"]
+shader = ExtResource("2_plane_shader")
+shader_parameter/plane_color = Color(0.4, 0.4, 0.45, 1)
+shader_parameter/light_dir = Vector3(-0.2, 0.8, 0.5)
+shader_parameter/ambient = 0.6
+shader_parameter/orb_pos = Vector2(0, 0)
+shader_parameter/orb_height = 0.1
+shader_parameter/orb_radius = 0.12
+shader_parameter/shadow_intensity = 0.6
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_orb"]
+shader = ExtResource("3_orb_shader")
+shader_parameter/orb_color = Color(0.2, 0.4, 1, 1)
+shader_parameter/light_dir = Vector3(-0.2, 0.8, 0.5)
+shader_parameter/ambient = 0.15
+shader_parameter/specular_strength = 0.6
+shader_parameter/specular_power = 32.0
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_orb_ctrl")
+
+[node name="Plane" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_plane")
+offset_left = 280.0
+offset_top = 160.0
+offset_right = 680.0
+offset_bottom = 560.0
+
+[node name="Orb" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_orb")
+offset_left = 430.0
+offset_top = 310.0
+offset_right = 530.0
+offset_bottom = 410.0

@@ -1,0 +1,127 @@
+[gd_scene load_steps=25 format=3 uid="uid://fire_scene_001"]
+
+[ext_resource type="Shader" path="res://fire/Fire_Drop_Shader.gdshader" id="1_shader"]
+[ext_resource type="ArrayMesh" path="res://fire/Tear_Model.tres" id="2_mesh"]
+
+; === ALPHA TEXTURE (fade out at top) ===
+[sub_resource type="Gradient" id="Gradient_alpha"]
+offsets = PackedFloat32Array(0, 0.07, 0.27)
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_alpha"]
+gradient = SubResource("Gradient_alpha")
+width = 32
+height = 128
+fill_from = Vector2(0, 1)
+fill_to = Vector2(0, 0)
+
+; === COLORING TEXTURE (orange fire gradient) ===
+[sub_resource type="Gradient" id="Gradient_color"]
+offsets = PackedFloat32Array(0, 0.03, 0.1, 0.26, 0.35)
+colors = PackedColorArray(0.18, 0.18, 0.18, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0.2, 0, 1, 0.16, 0.16, 0.16, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_color"]
+gradient = SubResource("Gradient_color")
+height = 256
+fill_from = Vector2(0, 1)
+fill_to = Vector2(0, 0)
+
+; === NOISE TEXTURE ===
+[sub_resource type="Gradient" id="Gradient_noise"]
+offsets = PackedFloat32Array(0, 0.17, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_noise"]
+fractal_type = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_noise"]
+width = 64
+height = 64
+seamless = true
+noise = SubResource("FastNoiseLite_noise")
+color_ramp = SubResource("Gradient_noise")
+
+; === UV RANDOM TEXTURE ===
+[sub_resource type="Gradient" id="Gradient_random"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_random"]
+noise_type = 0
+fractal_type = 0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_random"]
+seamless = true
+noise = SubResource("FastNoiseLite_random")
+color_ramp = SubResource("Gradient_random")
+
+; === VERTEX NOISE POWER TEXTURE ===
+[sub_resource type="Gradient" id="Gradient_vertex_power"]
+offsets = PackedFloat32Array(0.31, 0.68, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vertex_power"]
+gradient = SubResource("Gradient_vertex_power")
+fill_from = Vector2(1, 1)
+
+; === VERTEX NOISE TEXTURE ===
+[sub_resource type="Gradient" id="Gradient_vertex"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_vertex"]
+fractal_type = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_vertex"]
+width = 64
+height = 64
+seamless = true
+noise = SubResource("FastNoiseLite_vertex")
+color_ramp = SubResource("Gradient_vertex")
+
+; === TAIL NOISE POWER TEXTURE ===
+[sub_resource type="Gradient" id="Gradient_tail_power"]
+offsets = PackedFloat32Array(0.58, 0.91, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_tail_power"]
+gradient = SubResource("Gradient_tail_power")
+fill_to = Vector2(0, 1)
+
+; === TAIL NOISE TEXTURE ===
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_tail"]
+noise_type = 0
+fractal_type = 0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_tail"]
+seamless = true
+noise = SubResource("FastNoiseLite_tail")
+
+; === SHADER MATERIAL ===
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fire"]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/Speed = Vector2(0.675, 0.23)
+shader_parameter/Emmision_Power = 1.5
+shader_parameter/Twist_Power = 0.99
+shader_parameter/Displace_Power = 0.5
+shader_parameter/Fresnel_Power = 5.0
+shader_parameter/Random_Power = 0.16
+shader_parameter/Fresnel_Color = Color(1, 1, 0, 1)
+shader_parameter/Tail_Displace_Power = 0.3
+shader_parameter/Noise_Texture = SubResource("NoiseTexture2D_noise")
+shader_parameter/Coloring_Texture = SubResource("GradientTexture2D_color")
+shader_parameter/UV_Random = SubResource("NoiseTexture2D_random")
+shader_parameter/Alpha_Texture = SubResource("GradientTexture2D_alpha")
+shader_parameter/Vertex_Noise_Texture = SubResource("NoiseTexture2D_vertex")
+shader_parameter/Vertex_Noise_Power_Texture = SubResource("GradientTexture2D_vertex_power")
+shader_parameter/Tail_Vertex_Noise_Texture = SubResource("NoiseTexture2D_tail")
+shader_parameter/Tail_Vertex_Noise_Power_Texture = SubResource("GradientTexture2D_tail_power")
+
+[node name="Fire" type="Node3D"]
+
+[node name="FireMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_fire")
+cast_shadow = 0
+mesh = ExtResource("2_mesh")
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.55, 0, 1)
+light_energy = 2.0
+omni_range = 4.0
