@@ -10,6 +10,7 @@ uniform float rim_intensity : hint_range(0.0, 3.0) = 1.5;
 uniform float inner_glow : hint_range(0.0, 2.0) = 0.8;
 uniform float tail_length : hint_range(0.0, 3.0) = 3.0;
 uniform float tail_width : hint_range(0.0, 1.0) = 0.14;
+uniform float opacity : hint_range(0.0, 1.0) = 1.0;
 
 varying float tail_factor;
 varying vec3 local_pos;
@@ -49,11 +50,11 @@ void fragment() {
 
     vec3 final_color = base_color + rim + inner;
 
-    // Alpha: solid body, fade in tail
-    float alpha = mix(0.95, 0.4, tail_blend);
+    // Alpha: solid body, fade in tail, modulated by opacity uniform
+    float alpha = mix(0.95, 0.4, tail_blend) * opacity;
 
     ALBEDO = final_color;
-    EMISSION = final_color * 0.3; // Bright glow
+    EMISSION = final_color * 0.3 * opacity; // Bright glow fades with opacity
     ALPHA = alpha;
     METALLIC = 0.0;
     ROUGHNESS = 0.4;
