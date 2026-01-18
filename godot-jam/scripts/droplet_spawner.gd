@@ -184,9 +184,9 @@ func _spawn_droplet() -> void:
 	if not _use_pool:
 		add_child(droplet)
 
-	# Gold power-up: 1/N chance after delay, if not already powered up
+	# Gold power-up: 1/N chance after delay, if enabled and not already powered up
 	var is_gold := false
-	if GameManager.game_time >= GOLD_SPAWN_DELAY and not GameManager.is_powered_up:
+	if GameManager.gold_powerups_enabled and GameManager.game_time >= GOLD_SPAWN_DELAY and not GameManager.is_powered_up:
 		if randi() % GOLD_SPAWN_CHANCE == 0:
 			droplet.make_gold()
 			is_gold = true
