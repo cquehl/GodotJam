@@ -96,6 +96,22 @@ func _handle_idle_input() -> void:
 	if Input.is_action_just_pressed("jump"):
 		_start_game_loading()
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _load_state != LoadState.IDLE:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_C:
+				_open_credits()
+			KEY_S:
+				_open_settings()
+
+func _open_credits() -> void:
+	get_tree().change_scene_to_file("res://scenes/credits.tscn")
+
+func _open_settings() -> void:
+	get_tree().change_scene_to_file("res://scenes/settings.tscn")
+
 func _start_game_loading() -> void:
 	# IMMEDIATE visual feedback - change text instantly
 	_load_state = LoadState.STARTING
