@@ -33,12 +33,28 @@ func _process(delta: float) -> void:
 	var shadow_scale := shadow_base - (bob_offset * 0.3)
 	shadow.scale = Vector3(shadow_scale, 1.0, shadow_scale)
 
-	# Fade blue droplets when player is powered up
+	# Visual feedback for blue droplets during power-up
 	if not is_collectible and not is_gold:
-		var target_alpha := 0.4 if GameManager.is_powered_up else 1.0
 		var mat := mesh.get_surface_override_material(0) as StandardMaterial3D
 		if mat:
-			mat.albedo_color.a = lerpf(mat.albedo_color.a, target_alpha, delta * 5.0)
+			var target_alpha := 1.0
+			if GameManager.is_powered_up:
+				var time_left := GameManager.power_up_timer
+				var time_elapsed := GameManager.POWER_UP_DURATION - time_left
+
+				if time_elapsed < 1.0:
+					# First second: rapid flicker
+					target_alpha = 0.3 if fmod(time_elapsed * 12.0, 1.0) < 0.5 else 0.8
+				elif time_left > 2.0:
+					# Middle: steady 60% opacity
+					target_alpha = 0.4
+				else:
+					# Last 2 seconds: slowly phase back to solid
+					var blink_speed := lerpf(2.0, 6.0, 1.0 - (time_left / 2.0))
+					var blink := sin(time_left * blink_speed * PI) * 0.5 + 0.5
+					target_alpha = lerpf(0.4, 1.0, blink)
+
+			mat.albedo_color.a = lerpf(mat.albedo_color.a, target_alpha, delta * 10.0)
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed

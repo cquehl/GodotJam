@@ -105,7 +105,7 @@ func _reset_timer() -> void:
 	next_spawn_time = randf_range(spawn_interval_min, spawn_interval_max)
 
 func _spawn_droplet() -> void:
-	if GameManager.score >=15:
+	if GameManager.score >=18:
 		_spawn_targeted_droplet()
 	
 	var droplet = droplet_scene.instantiate()
@@ -118,7 +118,7 @@ func _spawn_droplet() -> void:
 	# Gold power-up: 1/10 chance after 10 seconds, if not already powered up
 	var is_gold := false
 	if GameManager.game_time >= 10.0 and not GameManager.is_powered_up:
-		if randi() % 10 == 0:
+		if randi() % 20 == 0:
 			droplet.make_gold()
 			is_gold = true
 

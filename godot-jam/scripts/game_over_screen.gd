@@ -15,28 +15,34 @@ func _ready() -> void:
 	# Set message and color based on score
 	var message: String
 	var color: Color
-
-	if score == 0:
+	
+	if randi() % 6 == 0:
+		message = "Did you even jump?"
+		color = Color(0.983, 0.372, 0.692, 1.0)
+	elif randi() % 12 == 0:
+		message = "You gotta jump!"
+		color = Color(0.184, 0.961, 0.859, 1.0)
+	elif score == 0:
 		message = "Were you paying attention?"
-		color = Color.GREEN
+		color = Color.RED
 	elif score <= 3:
 		message = "Watch out next time!"
-		color = Color.LIME
+		color = Color.ORANGE
 	elif score <= 7:
 		message = "I hope you had fun!"
 		color = Color.YELLOW
 	elif score <= 14:
 		message = "Wow, that's impressive!"
-		color = Color.ORANGE
+		color = Color.BLUE
 	elif score <= 20:
 		message = "Seriously!!! You are impressive!"
-		color = Color.CORAL
+		color = Color.INDIGO
 	elif score <= 29:
 		message = "You're on fire! Literally!"
-		color = Color.HOT_PINK
+		color = Color.LAWN_GREEN
 	else:
 		message = "You win! I didn't think this was possible. GGz"
-		color = Color.CYAN
+		color = Color.VIOLET
 
 	message_label.text = message
 	message_label.add_theme_color_override("font_color", color)
