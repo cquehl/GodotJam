@@ -7,6 +7,8 @@ uniform float pulse_speed : hint_range(0.0, 10.0) = 3.0;
 uniform float arc_density : hint_range(0.0, 20.0) = 12.0;
 uniform float glow_intensity : hint_range(0.0, 5.0) = 2.5;
 uniform float energy_flow_speed : hint_range(0.0, 5.0) = 2.0;
+uniform float reflection_strength : hint_range(0.0, 1.0) = 0.25;
+uniform float reflection_distortion : hint_range(0.0, 1.0) = 0.3;
 
 // Improved noise function
 float hash(vec3 p) {
@@ -84,8 +86,26 @@ void fragment() {
     // Fresnel for edge glow
     float fresnel = pow(1.0 - dot(NORMAL, VIEW), 3.0);
 
+    // Environment mapping with electric distortion
+    // Distort reflection direction based on electric arcs
+    vec3 distorted_normal = NORMAL;
+    distorted_normal.x += (arcs - 0.5) * reflection_distortion * 0.3;
+    distorted_normal.y += sin(TIME * pulse_speed + arc_pattern * 6.28) * reflection_distortion * 0.2;
+    distorted_normal = normalize(distorted_normal);
+
+    vec3 reflection_dir = reflect(-VIEW, distorted_normal);
+    // Sample environment with some blur for energy field effect
+    vec3 env_color = textureLod(RADIANCE, reflection_dir, 0.5).rgb;
+
+    // Tint reflection with electric color
+    vec3 tinted_reflection = env_color * (electric_color.rgb * 0.5 + vec3(0.5));
+
     // Mix colors based on effects
     vec3 base_color = mix(electric_color.rgb, core_color.rgb, core_glow);
+
+    // Blend in environment reflection (less in the center where energy is intense)
+    float reflection_amount = (1.0 - core_glow * 0.7) * reflection_strength;
+    base_color = mix(base_color, tinted_reflection, reflection_amount);
 
     // Add electric arc highlights
     vec3 arc_color = vec3(0.5, 1.0, 0.6) * arcs;

@@ -9,6 +9,8 @@ uniform float ripple_speed : hint_range(0.0, 5.0) = 2.0;
 uniform float ripple_scale : hint_range(0.0, 20.0) = 8.0;
 uniform float flow_speed : hint_range(0.0, 10.0) = 4.0;
 uniform float flow_intensity : hint_range(0.0, 1.0) = 0.3;
+uniform float reflection_strength : hint_range(0.0, 1.0) = 0.4;
+uniform float reflection_roughness : hint_range(0.0, 1.0) = 0.15;
 
 // Noise function for ripples
 float hash(vec2 p) {
@@ -107,11 +109,23 @@ void fragment() {
     ripple_normal.x += ripples;
     ripple_normal = normalize(ripple_normal);
 
+    // Environment mapping (reflection)
+    vec3 reflection_dir = reflect(-VIEW, ripple_normal);
+    // Sample environment with slight blur for water surface
+    vec3 env_color = textureLod(RADIANCE, reflection_dir, reflection_roughness * 5.0).rgb;
+
+    // Tint environment reflection with water color
+    vec3 tinted_reflection = mix(env_color, env_color * water_color.rgb, 0.3);
+
     // Refraction-like effect
     vec3 refracted_color = base_color + vec3(ripples * refraction_strength);
 
     // Add flow highlights to the base color
     refracted_color += vec3(0.6, 0.8, 1.0) * flow_highlight;
+
+    // Blend reflection with base color based on fresnel (more reflection at grazing angles)
+    float reflection_mix = fresnel * 0.5 + 0.5; // 0.5 to 1.0
+    refracted_color = mix(refracted_color, tinted_reflection, reflection_strength * reflection_mix);
 
     // Specular highlights (water shine)
     float spec = pow(max(dot(ripple_normal, VIEW), 0.0), 32.0);
