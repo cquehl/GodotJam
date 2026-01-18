@@ -10,6 +10,16 @@ extends Node3D
 @export var droplet_speed: float = 6.0
 @export var targeted_droplet_speed: float = 7.0
 
+# Spawn positioning
+const SPAWN_DISTANCE_OFFSET: float = 4.0  # Distance beyond platform radius to spawn droplets
+
+# Difficulty scaling thresholds
+const BARRAGE_START_SCORE: int = 3  # Score at which targeted barrages begin
+const TARGETED_ALWAYS_SCORE: int = 18  # Score at which all droplets target player
+const GOLD_SPAWN_DELAY: float = 10.0  # Seconds before gold power-ups can spawn
+const GOLD_SPAWN_CHANCE: int = 20  # 1/N chance of gold spawn
+const PLAYER_TARGET_CHANCE: int = 12  # 1/N chance of targeting player directly
+
 # Fallback scene for when pool isn't ready
 var _fallback_droplet_scene: PackedScene = null
 
@@ -48,7 +58,7 @@ func _exit_tree() -> void:
 	_pending_barrage_timers.clear()
 
 func _on_score_changed(new_score: int) -> void:
-	if new_score < 3:
+	if new_score < BARRAGE_START_SCORE:
 		return
 	var count := 1
 	if new_score < 5:
@@ -86,7 +96,7 @@ func _spawn_targeted_droplet() -> void:
 	droplet.make_large()
 
 	var radius: float = GameManager.platform_radius
-	var spawn_distance := radius + 4.0
+	var spawn_distance := radius + SPAWN_DISTANCE_OFFSET
 
 	# Get current orb position as target
 	var target_xz := Vector2(orb.position.x, orb.position.z)
@@ -119,7 +129,7 @@ func _spawn_huge_targeted_droplet() -> void:
 	droplet.make_huge()
 
 	var radius: float = GameManager.platform_radius
-	var spawn_distance := radius + 4.0
+	var spawn_distance := radius + SPAWN_DISTANCE_OFFSET
 
 	# Get current orb position as target
 	var target_xz := Vector2(orb.position.x, orb.position.z)
@@ -164,7 +174,7 @@ func _reset_timer() -> void:
 	next_spawn_time = randf_range(spawn_interval_min, spawn_interval_max)
 
 func _spawn_droplet() -> void:
-	if GameManager.score >= 18:
+	if GameManager.score >= TARGETED_ALWAYS_SCORE:
 		_spawn_targeted_droplet()
 
 	var droplet := _get_droplet()
@@ -174,10 +184,10 @@ func _spawn_droplet() -> void:
 	if not _use_pool:
 		add_child(droplet)
 
-	# Gold power-up: 1/20 chance after 10 seconds, if not already powered up
+	# Gold power-up: 1/N chance after delay, if not already powered up
 	var is_gold := false
-	if GameManager.game_time >= 10.0 and not GameManager.is_powered_up:
-		if randi() % 20 == 0:
+	if GameManager.game_time >= GOLD_SPAWN_DELAY and not GameManager.is_powered_up:
+		if randi() % GOLD_SPAWN_CHANCE == 0:
 			droplet.make_gold()
 			is_gold = true
 
@@ -212,7 +222,7 @@ func _spawn_droplet() -> void:
 	var target_angle: float = spawn_angle + PI + angle_offset
 
 	# Calculate positions (further outside the platform, near edge of camera view)
-	var spawn_distance := radius + 4.0
+	var spawn_distance := radius + SPAWN_DISTANCE_OFFSET
 	var spawn_pos := Vector3(
 		cos(spawn_angle) * spawn_distance,
 		0.3,
@@ -220,8 +230,8 @@ func _spawn_droplet() -> void:
 	)
 
 	var target_pos: Vector3
-	# 1 in 12 chance to target the player
-	if randi() % 12 == 0 and orb != null:
+	# 1 in N chance to target the player
+	if randi() % PLAYER_TARGET_CHANCE == 0 and orb != null:
 		target_pos = Vector3(orb.position.x, 0.3, orb.position.z)
 	else:
 		target_pos = Vector3(

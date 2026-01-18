@@ -149,19 +149,5 @@ func _transition_to_game() -> void:
 	_load_state = LoadState.TRANSITIONING
 	start_prompt.text = "Go!"
 
-	# Initialize game state
-	GameManager.reset_score()
-	GameManager.game_time = 0.0
-	GameManager.game_active = true
-	GameManager.is_powered_up = false
-	GameManager.is_immune = false
-
-	# Get scene from preloader (preferred) or our own threaded load (fallback)
-	# We may have arrived here via either path in _check_threaded_load
-	var scene: PackedScene
-	if Preloader.is_game_scene_ready:
-		scene = Preloader.get_game_scene()
-	else:
-		scene = ResourceLoader.load_threaded_get(GAME_SCENE_PATH) as PackedScene
-
-	get_tree().change_scene_to_packed(scene)
+	# Let GameManager handle state reset and scene transition
+	GameManager.start_game()
