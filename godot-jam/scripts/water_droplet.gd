@@ -10,7 +10,14 @@ var gold_height: float = 1.2  # Height requiring jump to collect
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var shadow: MeshInstance3D = $Shadow
 
+# Preload shaders
+var water_shader: Shader = preload("res://shaders/water_droplet.gdshader")
+var electric_shader: Shader = preload("res://shaders/electric_orb.gdshader")
+
 func _ready() -> void:
+	# Apply water droplet shader to blue droplets by default
+	_apply_water_shader()
+
 	# Auto-destroy after crossing platform
 	var timer := get_tree().create_timer(6.0)
 	timer.timeout.connect(queue_free)
@@ -18,6 +25,12 @@ func _ready() -> void:
 	# Connect collision signal
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
+
+func _apply_water_shader() -> void:
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = water_shader
+	shader_mat.set_shader_parameter("water_color", Color(0.2, 0.5, 1.0, 0.85))
+	mesh.set_surface_override_material(0, shader_mat)
 
 func _process(delta: float) -> void:
 	position += velocity * delta
@@ -35,9 +48,10 @@ func _process(delta: float) -> void:
 
 	# Visual feedback for blue droplets during power-up
 	if not is_collectible and not is_gold:
-		var mat := mesh.get_surface_override_material(0) as StandardMaterial3D
+		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
 		if mat:
-			var target_alpha := 1.0
+			var current_color := mat.get_shader_parameter("water_color") as Color
+			var target_alpha := 0.85
 			if GameManager.is_powered_up:
 				var time_left := GameManager.power_up_timer
 				var time_elapsed := GameManager.POWER_UP_DURATION - time_left
@@ -52,20 +66,23 @@ func _process(delta: float) -> void:
 					# Last 2 seconds: slowly phase back to solid
 					var blink_speed := lerpf(2.0, 6.0, 1.0 - (time_left / 2.0))
 					var blink := sin(time_left * blink_speed * PI) * 0.5 + 0.5
-					target_alpha = lerpf(0.4, 1.0, blink)
+					target_alpha = lerpf(0.4, 0.85, blink)
 
-			mat.albedo_color.a = lerpf(mat.albedo_color.a, target_alpha, delta * 10.0)
+			current_color.a = lerpf(current_color.a, target_alpha, delta * 10.0)
+			mat.set_shader_parameter("water_color", current_color)
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed
 
 func make_collectible() -> void:
 	is_collectible = true
-	# Change to green color
-	var mat := mesh.get_surface_override_material(0).duplicate() as StandardMaterial3D
-	mat.albedo_color = Color(0.2, 1.0, 0.3, 0.8)
-	mat.emission = Color(0.1, 0.8, 0.2, 1)
-	mesh.set_surface_override_material(0, mat)
+	# Apply electric shader for green collectibles
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = electric_shader
+	shader_mat.set_shader_parameter("electric_color", Color(0.2, 1.0, 0.3, 0.8))
+	shader_mat.set_shader_parameter("core_color", Color(0.8, 1.0, 0.9, 1.0))
+	shader_mat.set_shader_parameter("glow_intensity", 2.5)
+	mesh.set_surface_override_material(0, shader_mat)
 
 func make_large() -> void:
 	# Scale up the droplet and shadow
@@ -78,10 +95,11 @@ func make_large() -> void:
 	sphere = sphere.duplicate()
 	sphere.radius *= large_scale
 	collision_shape.shape = sphere
-	# Make it more visible with brighter emission
-	var mat := mesh.get_surface_override_material(0).duplicate() as StandardMaterial3D
-	mat.emission_energy_multiplier = 0.8
-	mesh.set_surface_override_material(0, mat)
+	# Make it more visible with brighter glow (only for green collectibles)
+	if is_collectible:
+		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
+		if mat:
+			mat.set_shader_parameter("glow_intensity", 3.5)
 
 func make_huge() -> void:
 	# Scale up the droplet and shadow
@@ -94,10 +112,11 @@ func make_huge() -> void:
 	sphere = sphere.duplicate()
 	sphere.radius *= large_scale
 	collision_shape.shape = sphere
-	# Make it more visible with brighter emission
-	var mat := mesh.get_surface_override_material(0).duplicate() as StandardMaterial3D
-	mat.emission_energy_multiplier = 0.8
-	mesh.set_surface_override_material(0, mat)
+	# Make it more visible with brighter glow (only for green collectibles)
+	if is_collectible:
+		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
+		if mat:
+			mat.set_shader_parameter("glow_intensity", 4.0)
 
 func make_gold() -> void:
 	is_gold = true

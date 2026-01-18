@@ -1,9 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://cypksu2x31fcw"]
+[gd_scene load_steps=16 format=3 uid="uid://cypksu2x31fcw"]
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
 [ext_resource type="Script" uid="uid://cord3pj7715bo" path="res://scripts/droplet_spawner.gd" id="3_spawner"]
 [ext_resource type="Script" uid="uid://cepw50j0ie6bd" path="res://scripts/score_ui.gd" id="4_score_ui"]
+[ext_resource type="Shader" path="res://shaders/starfield_skybox.gdshader" id="5_starfield"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_eye"]
 size = Vector3(0.2, 0.3, 0.08)
@@ -19,13 +20,36 @@ outer_radius = 0.38
 rings = 16
 ring_segments = 8
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
+shader = ExtResource("5_starfield")
+shader_parameter/nebula_color_1 = Vector3(0.1, 0.05, 0.3)
+shader_parameter/nebula_color_2 = Vector3(0.3, 0.1, 0.5)
+shader_parameter/nebula_color_3 = Vector3(0.05, 0.1, 0.3)
+shader_parameter/nebula_intensity = 0.4
+shader_parameter/star_density = 0.5
+shader_parameter/star_brightness = 1.8
+shader_parameter/large_star_density = 0.02
+shader_parameter/star_color_tint = Vector3(0.9, 0.95, 1)
+shader_parameter/rotation_speed = 0.01
+shader_parameter/galaxy_density = 0.015
+shader_parameter/galaxy_brightness = 0.8
+shader_parameter/enable_twinkle = true
+shader_parameter/twinkle_speed = 2.0
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ShaderMaterial_starfield")
+
 [sub_resource type="Environment" id="Environment_1"]
-background_mode = 1
-background_color = Color(0.25, 0.25, 0.3, 1)
-ambient_light_source = 2
-ambient_light_color = Color(0.4, 0.4, 0.5, 1)
-ambient_light_energy = 0.3
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 3
+ambient_light_color = Color(0.3, 0.3, 0.4, 1)
+ambient_light_sky_contribution = 0.5
+ambient_light_energy = 0.4
+tonemap_mode = 2
 glow_enabled = true
+glow_intensity = 1.2
+glow_strength = 1.1
 glow_blend_mode = 0
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_platform"]
@@ -35,9 +59,13 @@ height = 0.3
 rings = 1
 
 [sub_resource type="StandardMaterial3D" id="Material_platform"]
-albedo_color = Color(0.4, 0.4, 0.45, 1)
-metallic = 0.1
-roughness = 0.8
+albedo_color = Color(0.15, 0.15, 0.2, 1)
+metallic = 0.7
+metallic_specular = 0.8
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.05, 0.05, 0.15, 1)
+emission_energy_multiplier = 0.3
 
 [sub_resource type="SphereMesh" id="SphereMesh_orb"]
 radial_segments = 32
