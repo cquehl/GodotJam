@@ -167,4 +167,5 @@ func _handle_collision() -> void:
 		# Blue droplet - check for invincibility
 		if GameManager.is_powered_up or GameManager.is_immune:
 			return  # Ignore collision while powered up or immune
+		AudioManager.play_hit()
 		GameManager.game_over()

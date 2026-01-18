@@ -227,4 +227,5 @@ func _handle_collision() -> void:
 	else:
 		if GameManager.is_powered_up or GameManager.is_immune:
 			return
+		AudioManager.play_hit()
 		GameManager.game_over()

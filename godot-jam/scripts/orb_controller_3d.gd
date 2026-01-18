@@ -132,6 +132,8 @@ func _handle_jumping(delta: float) -> void:
 		jump_buffer_timer = 0
 		# Squash on jump
 		target_scale = Vector3(0.8, 1.0 + SQUASH_AMOUNT, 0.8)
+		# Play jump sound
+		AudioManager.play_jump()
 
 	# Apply gravity
 	if not is_grounded:
