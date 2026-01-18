@@ -52,6 +52,8 @@ shader_parameter/edge_fade = 0.30800001230093
 shader_parameter/noise_texture_1 = ExtResource("7_noise1")
 
 [sub_resource type="SphereMesh" id="SphereMesh_orb"]
+radius = 0.5
+height = 1.0
 radial_segments = 32
 rings = 16
 
@@ -64,6 +66,7 @@ emission = Color(1, 0.4, 0, 1)
 emission_energy_multiplier = 0.8
 
 [sub_resource type="SphereShape3D" id="SphereShape_orb"]
+radius = 0.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_eye"]
 size = Vector3(0.35, 0.45, 0.1)
