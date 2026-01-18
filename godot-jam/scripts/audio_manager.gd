@@ -110,18 +110,34 @@ func _setup_sfx_pool() -> void:
 		add_child(player)
 		_sfx_players.append(player)
 
-func _preload_audio() -> void:
-	# Only preload small SFX synchronously - music is loaded on-demand
-	for sfx_name in SFX:
-		var sfx_path: String = SFX[sfx_name]
-		if ResourceLoader.exists(sfx_path):
-			_cached_sfx[sfx_name] = load(sfx_path)
+var _sfx_load_index: int = 0
+var _sfx_keys: Array = []
 
+func _preload_audio() -> void:
 	# Start loading menu music in background (non-blocking)
 	if ResourceLoader.exists(MENU_MUSIC):
 		ResourceLoader.load_threaded_request(MENU_MUSIC)
 
-	# DON'T preload gameplay music - it's 12MB and not needed until game starts
+	# Load SFX gradually (one per frame) to avoid blocking
+	_sfx_keys = SFX.keys()
+	_sfx_load_index = 0
+	if not _sfx_keys.is_empty():
+		call_deferred("_load_next_sfx")
+
+func _load_next_sfx() -> void:
+	if _sfx_load_index >= _sfx_keys.size():
+		return
+
+	var sfx_name: String = _sfx_keys[_sfx_load_index]
+	var sfx_path: String = SFX[sfx_name]
+	if ResourceLoader.exists(sfx_path):
+		_cached_sfx[sfx_name] = load(sfx_path)
+
+	_sfx_load_index += 1
+
+	# Load next SFX on next frame
+	if _sfx_load_index < _sfx_keys.size():
+		call_deferred("_load_next_sfx")
 
 func _connect_game_signals() -> void:
 	# Connect to game events for automatic SFX
