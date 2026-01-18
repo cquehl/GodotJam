@@ -115,19 +115,27 @@ func _spawn_droplet() -> void:
 	#if randi() % 7 == 0:
 		#droplet.make_collectible()
 
+	# Gold power-up: 1/10 chance after 10 seconds, if not already powered up
+	var is_gold := false
+	if GameManager.game_time >= 10.0 and not GameManager.is_powered_up:
+		if randi() % 10 == 0:
+			droplet.make_gold()
+			is_gold = true
+
 	# As score increases, bigger drops become more likely
 	var huge_chance = mini(GameManager.score, 30)  # 0-30%
 	var large_chance = mini(GameManager.score * 2, 40)  # 0-40%
-	
+
 	var is_collectible := false
-	var roll = randi() % 100
-	if randi() % 5 == 0:
-		droplet.make_collectible()
-		is_collectible = true
-	elif roll < huge_chance:
-		droplet.make_huge()
-	elif roll <  large_chance:
-		droplet.make_large()
+	if not is_gold:
+		var roll = randi() % 100
+		if randi() % 5 == 0:
+			droplet.make_collectible()
+			is_collectible = true
+		elif roll < huge_chance:
+			droplet.make_huge()
+		elif roll < large_chance:
+			droplet.make_large()
 
 	var radius: float = GameManager.platform_radius
 

@@ -2,10 +2,19 @@ extends Node3D
 
 @onready var orb: MeshInstance3D = $Orb
 @onready var platform: MeshInstance3D = $Platform
+@onready var face: Node3D = $Orb/Face
+@onready var collision_shape: CollisionShape3D = $Orb/Area3D/CollisionShape3D
 
 # Position & velocity on X/Z plane
 var position_xz: Vector2 = Vector2.ZERO
 var velocity_xz: Vector2 = Vector2.ZERO
+var face_direction: float = 0.0  # Angle the face is pointing
+
+# Power-up state
+var power_up_scale: float = 1.0
+var target_power_up_scale: float = 1.0
+var base_collision_radius: float = 0.5
+var blink_timer: float = 0.0
 
 # Jump state
 var jump_offset: float = 0.0
@@ -35,6 +44,24 @@ func _ready() -> void:
 	# Scale platform to match GameManager radius (mesh default is 5.0)
 	var scale_factor := GameManager.platform_radius / 5.0
 	platform.scale = Vector3(scale_factor, 1.0, scale_factor)
+
+	# Save base collision radius
+	var sphere := collision_shape.shape as SphereShape3D
+	base_collision_radius = sphere.radius
+
+	# Connect to power-up signals
+	GameManager.power_up_started.connect(_on_power_up_started)
+	GameManager.power_up_ended.connect(_on_power_up_ended)
+	GameManager.immunity_ended.connect(_on_immunity_ended)
+
+func _on_power_up_started() -> void:
+	target_power_up_scale = 3.0
+
+func _on_power_up_ended() -> void:
+	target_power_up_scale = 1.0
+
+func _on_immunity_ended() -> void:
+	orb.visible = true  # Ensure visible when immunity ends
 
 func _process(delta: float) -> void:
 	_handle_movement(delta)
@@ -125,11 +152,32 @@ func _handle_jumping(delta: float) -> void:
 			target_scale = Vector3(1.0 + SQUASH_AMOUNT, 1.0 - SQUASH_AMOUNT * 0.5, 1.0 + SQUASH_AMOUNT)
 
 func _update_visuals(delta: float) -> void:
+	# Smooth power-up scale transition
+	power_up_scale = lerpf(power_up_scale, target_power_up_scale, 5.0 * delta)
+
+	# Update collision shape radius
+	var sphere := collision_shape.shape as SphereShape3D
+	sphere.radius = base_collision_radius * power_up_scale
+
 	# Smooth scale interpolation (squash & stretch)
 	current_scale = current_scale.lerp(target_scale, 15.0 * delta)
 	target_scale = target_scale.lerp(Vector3.ONE, 8.0 * delta)
-	orb.scale = current_scale
+	orb.scale = current_scale * power_up_scale
 
-	# Update orb position
-	var orb_y := GameManager.orb_base_height + jump_offset
+	# Update orb position (adjust height for larger orb)
+	var orb_y := (GameManager.orb_base_height * power_up_scale) + jump_offset
 	orb.position = Vector3(position_xz.x, orb_y, position_xz.y)
+
+	# Rotate face toward movement direction
+	if velocity_xz.length() > 0.5:
+		var target_angle := atan2(velocity_xz.x, velocity_xz.y)
+		face_direction = lerp_angle(face_direction, target_angle, 10.0 * delta)
+	face.rotation.y = face_direction
+
+	# Blink during immunity
+	if GameManager.is_immune:
+		blink_timer += delta * 15.0  # Fast blink
+		orb.visible = int(blink_timer) % 2 == 0
+	else:
+		orb.visible = true
+		blink_timer = 0.0

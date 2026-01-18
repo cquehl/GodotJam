@@ -1,9 +1,23 @@
-[gd_scene load_steps=11 format=3 uid="uid://cypksu2x31fcw"]
+[gd_scene load_steps=14 format=3 uid="uid://cypksu2x31fcw"]
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
 [ext_resource type="Script" uid="uid://cord3pj7715bo" path="res://scripts/droplet_spawner.gd" id="3_spawner"]
 [ext_resource type="Script" uid="uid://cepw50j0ie6bd" path="res://scripts/score_ui.gd" id="4_score_ui"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_eye"]
+size = Vector3(0.2, 0.3, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="Material_face"]
+albedo_color = Color(0.05, 0.05, 0.05, 1)
+emission_enabled = true
+emission = Color(0.1, 0.1, 0.1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_mouth"]
+inner_radius = 0.3
+outer_radius = 0.38
+rings = 16
+ring_segments = 8
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -74,6 +88,23 @@ collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Orb/Area3D"]
 shape = SubResource("SphereShape_orb")
+
+[node name="Face" type="Node3D" parent="Orb"]
+
+[node name="LeftEye" type="MeshInstance3D" parent="Orb/Face"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.2, 0.75)
+mesh = SubResource("BoxMesh_eye")
+surface_material_override/0 = SubResource("Material_face")
+
+[node name="RightEye" type="MeshInstance3D" parent="Orb/Face"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.2, 0.75)
+mesh = SubResource("BoxMesh_eye")
+surface_material_override/0 = SubResource("Material_face")
+
+[node name="Mouth" type="MeshInstance3D" parent="Orb/Face"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -0.15, 0.35)
+mesh = SubResource("TorusMesh_mouth")
+surface_material_override/0 = SubResource("Material_face")
 
 [node name="DropletSpawner" type="Node3D" parent="."]
 script = ExtResource("3_spawner")

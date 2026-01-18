@@ -23,12 +23,27 @@ var high_score: int = 0
 var last_score: int = 0
 var game_time: float = 0.0
 var game_active: bool = false
+
+# =============================================================================
+# POWER-UP STATE
+# =============================================================================
+var is_powered_up: bool = false
+var power_up_timer: float = 0.0
+var is_immune: bool = false
+var immune_timer: float = 0.0
+const POWER_UP_DURATION: float = 10.0
+const IMMUNITY_DURATION: float = 2.0
+
 # =============================================================================
 # SIGNALS
 # =============================================================================
 signal settings_changed
 signal score_changed(new_score: int)
 signal game_paused(paused: bool)
+signal power_up_started
+signal power_up_ended
+signal immunity_started
+signal immunity_ended
 
 # =============================================================================
 # METHODS
@@ -50,6 +65,32 @@ func _process(delta: float) -> void:
 	if game_active and not is_paused:
 		game_time += delta
 
+		# Handle power-up timer
+		if is_powered_up:
+			power_up_timer -= delta
+			if power_up_timer <= 0:
+				end_power_up()
+
+		# Handle immunity timer
+		if is_immune:
+			immune_timer -= delta
+			if immune_timer <= 0:
+				is_immune = false
+				immunity_ended.emit()
+
+func activate_power_up() -> void:
+	is_powered_up = true
+	power_up_timer = POWER_UP_DURATION
+	power_up_started.emit()
+
+func end_power_up() -> void:
+	is_powered_up = false
+	power_up_ended.emit()
+	# Start immunity period
+	is_immune = true
+	immune_timer = IMMUNITY_DURATION
+	immunity_started.emit()
+
 func game_over() -> void:
 	game_active = false
 	last_score = score
@@ -62,4 +103,8 @@ func start_game() -> void:
 	reset_score()
 	game_time = 0.0
 	game_active = true
+	is_powered_up = false
+	is_immune = false
+	power_up_timer = 0.0
+	immune_timer = 0.0
 	get_tree().change_scene_to_file("res://scenes/game_3d.tscn")

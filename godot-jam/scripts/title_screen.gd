@@ -10,6 +10,12 @@ func _process(_delta: float) -> void:
 		var status := ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH)
 		if status == ResourceLoader.THREAD_LOAD_LOADED:
 			var scene := ResourceLoader.load_threaded_get(GAME_SCENE_PATH) as PackedScene
+			# Initialize game state before changing scene
+			GameManager.reset_score()
+			GameManager.game_time = 0.0
+			GameManager.game_active = true
+			GameManager.is_powered_up = false
+			GameManager.is_immune = false
 			get_tree().change_scene_to_packed(scene)
 		return
 
