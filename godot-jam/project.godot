@@ -61,6 +61,10 @@ jump={
 ]
 }
 
+[gui]
+
+theme/custom="res://theme/default_theme.tres"
+
 [rendering]
 
 renderer/rendering_method="mobile"

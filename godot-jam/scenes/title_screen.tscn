@@ -63,15 +63,20 @@ theme_override_font_sizes/font_size = 56
 text = "CONTROLS"
 horizontal_alignment = 1
 
-[node name="ControlsList" type="Label" parent="VBox"]
+[node name="ControlsList" type="RichTextLabel" parent="VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "WASD - Move
+custom_minimum_size = Vector2(0, 280)
+bbcode_enabled = true
+theme_override_font_sizes/normal_font_size = 48
+text = "[center]WASD - Move
 SPACE - Jump
 
-Avoid blue water drops
-Collect green drops for points"
-horizontal_alignment = 1
+Avoid [color=#4d99ff]blue[/color] water drops
+Collect [color=#33ff4d]green[/color] drops for points
+Collect [color=#ffd933]yellow[/color] drops to grow[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
 [node name="Spacer2" type="Control" parent="VBox"]
 custom_minimum_size = Vector2(0, 40)
