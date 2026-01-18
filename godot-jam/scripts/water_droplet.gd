@@ -54,6 +54,23 @@ func make_large() -> void:
 	mat.emission_energy_multiplier = 0.8
 	mesh.set_surface_override_material(0, mat)
 
+func make_huge() -> void:
+	# Scale up the droplet and shadow
+	var large_scale := 5
+	mesh.scale = Vector3.ONE * large_scale
+	shadow.scale = Vector3(large_scale, 1.0, large_scale)
+	# Increase collision size
+	var collision_shape := $CollisionShape3D as CollisionShape3D
+	var sphere := collision_shape.shape as SphereShape3D
+	sphere = sphere.duplicate()
+	sphere.radius *= large_scale
+	collision_shape.shape = sphere
+	# Make it more visible with brighter emission
+	var mat := mesh.get_surface_override_material(0).duplicate() as StandardMaterial3D
+	mat.emission_energy_multiplier = 0.8
+	mesh.set_surface_override_material(0, mat)
+
+
 func _on_body_entered(_body: Node3D) -> void:
 	_handle_collision()
 

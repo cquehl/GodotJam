@@ -3,7 +3,7 @@ extends Node
 # =============================================================================
 # PLATFORM SETTINGS (3D)
 # =============================================================================
-var platform_radius: float = 5.0  # Radius of the circular platform
+var platform_radius: float = 7  # Radius of the circular platform
 
 # =============================================================================
 # ORB SETTINGS (3D)
@@ -19,6 +19,10 @@ var gravity: float = 25.0  # Downward acceleration
 # =============================================================================
 var score: int = 0
 var is_paused: bool = false
+var high_score: int = 0
+var last_score: int = 0
+var game_time: float = 0.0
+var game_active: bool = false
 # =============================================================================
 # SIGNALS
 # =============================================================================
@@ -31,7 +35,7 @@ signal game_paused(paused: bool)
 # =============================================================================
 func add_score(amount: int) -> void:
 	score += amount
-	score_changed.emit(score)
+	score_changed.emit(score) 
 
 func reset_score() -> void:
 	score = 0
@@ -42,11 +46,20 @@ func toggle_pause() -> void:
 	get_tree().paused = is_paused
 	game_paused.emit(is_paused)
 
+func _process(delta: float) -> void:
+	if game_active and not is_paused:
+		game_time += delta
+
 func game_over() -> void:
-	# Return to title screen
+	game_active = false
+	last_score = score
+	if high_score < score:
+		high_score = score
 	get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
 	reset_score()
 
 func start_game() -> void:
 	reset_score()
+	game_time = 0.0
+	game_active = true
 	get_tree().change_scene_to_file("res://scenes/game_3d.tscn")

@@ -31,6 +31,11 @@ const JUMP_BUFFER_TIME: float = 0.12  # Seconds to buffer jump before landing
 const JUMP_CUT_MULTIPLIER: float = 0.4  # Velocity multiplier when releasing jump early
 const SQUASH_AMOUNT: float = 0.3  # How much to squash/stretch
 
+func _ready() -> void:
+	# Scale platform to match GameManager radius (mesh default is 5.0)
+	var scale_factor := GameManager.platform_radius / 5.0
+	platform.scale = Vector3(scale_factor, 1.0, scale_factor)
+
 func _process(delta: float) -> void:
 	_handle_movement(delta)
 	_handle_jumping(delta)

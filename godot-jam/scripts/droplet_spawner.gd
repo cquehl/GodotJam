@@ -18,16 +18,18 @@ func _ready() -> void:
 	GameManager.score_changed.connect(_on_score_changed)
 
 func _on_score_changed(new_score: int) -> void:
-	if new_score >= 10:
-		var count := 6 if randi() % 2 == 0 else 8
-		_spawn_targeted_barrage(count)
-	elif new_score >= 7:
-		# Fire multiple targeted large droplets (3 or 5) with 1 second apart
-		var count := 3 if randi() % 2 == 0 else 5
-		_spawn_targeted_barrage(count)
-	elif new_score >= 5:
-		# Fire a single targeted large droplet
-		_spawn_targeted_droplet()
+	if new_score < 3:
+		return
+	var count := 1
+	if new_score < 5:
+		count = 1
+	elif new_score <= 10:
+		count = 2 if randi() % 2 == 0 else 3
+	else:
+		count = randi() % 5 + 5
+	_spawn_targeted_barrage(count)
+
+
 
 func _spawn_targeted_droplet() -> void:
 	if orb == null:
@@ -56,7 +58,36 @@ func _spawn_targeted_droplet() -> void:
 	droplet.position = spawn_pos
 	droplet.speed = targeted_droplet_speed
 	droplet.set_direction(target_pos - spawn_pos)
+	
+	
+func _spawn_huge_targeted_droplet() -> void:
+	if orb == null:
+		return
+	var droplet = droplet_scene.instantiate()
+	add_child(droplet)
+	droplet.make_huge()
 
+	var radius: float = GameManager.platform_radius
+	var spawn_distance := radius + 4.0
+
+	# Get current orb position as target
+	var target_xz := Vector2(orb.position.x, orb.position.z)
+
+	# Pick a random spawn angle
+	var spawn_angle: float = randf() * TAU
+	var spawn_pos := Vector3(
+		cos(spawn_angle) * spawn_distance,
+		0.3,
+		sin(spawn_angle) * spawn_distance
+	)
+
+	# Direction towards orb
+	var target_pos := Vector3(target_xz.x, 0.3, target_xz.y)
+
+	droplet.position = spawn_pos
+	droplet.speed = targeted_droplet_speed
+	droplet.set_direction(target_pos - spawn_pos)
+	
 func _spawn_targeted_barrage(count: int) -> void:
 	# Spawn multiple droplets with delays
 	for i in range(count):
@@ -81,8 +112,22 @@ func _spawn_droplet() -> void:
 	add_child(droplet)
 
 	# 1 in 7 chance to be a green collectible
-	if randi() % 7 == 0:
+	#if randi() % 7 == 0:
+		#droplet.make_collectible()
+
+	# As score increases, bigger drops become more likely
+	var huge_chance = mini(GameManager.score, 30)  # 0-30%
+	var large_chance = mini(GameManager.score * 2, 40)  # 0-40%
+	
+	var is_collectible := false
+	var roll = randi() % 100
+	if randi() % 5 == 0:
 		droplet.make_collectible()
+		is_collectible = true
+	elif roll < huge_chance:
+		droplet.make_huge()
+	elif roll <  large_chance:
+		droplet.make_large()
 
 	var radius: float = GameManager.platform_radius
 
@@ -90,10 +135,11 @@ func _spawn_droplet() -> void:
 	var spawn_angle: float = randf() * TAU
 
 	# Target angle: weighted toward center-crossing (0 offset = direct center)
-	# Use squared random to bias toward smaller offsets (center-crossing)
 	var t: float = randf()
 	t = t * t  # Squaring biases toward 0 (center-crossing paths)
-	var angle_offset: float = lerpf(PI * 0.05, PI * 0.6, t)  # Range from near-center to edge
+	# Collectibles always cross through center, others can edge-graze
+	var max_offset := PI * 0.15 if is_collectible else PI * 0.6
+	var angle_offset: float = lerpf(PI * 0.05, max_offset, t)
 	if randf() > 0.5:
 		angle_offset = -angle_offset
 	var target_angle: float = spawn_angle + PI + angle_offset
@@ -106,11 +152,16 @@ func _spawn_droplet() -> void:
 		sin(spawn_angle) * spawn_distance
 	)
 
-	var target_pos := Vector3(
-		cos(target_angle) * spawn_distance,
-		0.3,
-		sin(target_angle) * spawn_distance
-	)
+	var target_pos: Vector3
+	# 1 in 12 chance to target the player
+	if randi() % 12 == 0 and orb != null:
+		target_pos = Vector3(orb.position.x, 0.3, orb.position.z)
+	else:
+		target_pos = Vector3(
+			cos(target_angle) * spawn_distance,
+			0.3,
+			sin(target_angle) * spawn_distance
+		)
 
 	# Set droplet position and direction
 	droplet.position = spawn_pos

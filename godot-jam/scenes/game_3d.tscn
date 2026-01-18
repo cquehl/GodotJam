@@ -2,11 +2,8 @@
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
-[ext_resource type="Script" path="res://scripts/droplet_spawner.gd" id="3_spawner"]
-[ext_resource type="Script" path="res://scripts/score_ui.gd" id="4_score_ui"]
-
-[sub_resource type="SphereShape3D" id="SphereShape_orb"]
-radius = 0.5
+[ext_resource type="Script" uid="uid://cord3pj7715bo" path="res://scripts/droplet_spawner.gd" id="3_spawner"]
+[ext_resource type="Script" uid="uid://cepw50j0ie6bd" path="res://scripts/score_ui.gd" id="4_score_ui"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -40,6 +37,8 @@ emission_enabled = true
 emission = Color(1, 0.4, 0, 1)
 emission_energy_multiplier = 0.8
 
+[sub_resource type="SphereShape3D" id="SphereShape_orb"]
+
 [node name="Game3D" type="Node3D"]
 script = ExtResource("1_controller")
 
@@ -71,7 +70,6 @@ surface_material_override/0 = SubResource("Material_orb")
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.2, 0)
 
 [node name="Area3D" type="Area3D" parent="Orb"]
-collision_layer = 1
 collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Orb/Area3D"]
@@ -90,6 +88,8 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 200.0
 offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.19496703, 0.700714, 0.7298409, 1)
 theme_override_font_sizes/font_size = 28
 text = "Score: 0"
+horizontal_alignment = 1
 script = ExtResource("4_score_ui")
