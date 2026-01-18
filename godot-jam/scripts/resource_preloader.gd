@@ -52,8 +52,8 @@ var is_game_over_ready: bool = false
 var is_fully_loaded: bool = false
 
 func _ready() -> void:
-	# Start background preloading immediately
-	call_deferred("_start_background_loading")
+	# Delay preloading to let first frames render smoothly
+	get_tree().create_timer(0.2).timeout.connect(_start_background_loading)
 
 var _shader_index: int = 0
 

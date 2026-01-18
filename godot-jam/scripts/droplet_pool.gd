@@ -22,8 +22,14 @@ var water_shader: Shader = null
 var electric_shader: Shader = null
 
 func _ready() -> void:
-	# Defer initialization to run after Preloader's deferred _start_background_loading
-	call_deferred("_initialize_pool")
+	# DON'T initialize pool at startup - it's too heavy (30 GPU particle objects)
+	# Pool will be initialized on-demand when first droplet is requested
+	pass
+
+## Initialize pool on-demand (called from get_droplet or explicitly)
+func ensure_initialized() -> void:
+	if not _is_initialized:
+		_initialize_pool()
 
 func _initialize_pool() -> void:
 	# Try to get scene from preloader (may not be ready yet since it loads async)
@@ -33,9 +39,9 @@ func _initialize_pool() -> void:
 	else:
 		_droplet_scene = load(WATER_DROPLET_PATH)
 
-	# Get pre-compiled shaders from Preloader (these load synchronously at startup)
-	water_shader = load("res://shaders/water_droplet.gdshader")
-	electric_shader = load("res://shaders/electric_orb.gdshader")
+	# Get pre-compiled shaders from Preloader's cache (avoids reloading)
+	water_shader = Preloader.get_resource("res://shaders/water_droplet.gdshader") as Shader
+	electric_shader = Preloader.get_resource("res://shaders/electric_orb.gdshader") as Shader
 
 	# Create hidden parent for pooled objects
 	_pool_parent = Node.new()
@@ -60,9 +66,9 @@ func _create_pooled_droplet() -> Node:
 
 ## Get a droplet from the pool
 func get_droplet() -> Node:
+	# Initialize on first use (deferred from startup for faster loading)
 	if not _is_initialized:
-		push_warning("DropletPool not initialized yet")
-		return null
+		_initialize_pool()
 
 	var droplet: Node = null
 
