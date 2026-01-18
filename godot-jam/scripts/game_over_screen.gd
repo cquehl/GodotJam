@@ -1,5 +1,10 @@
 extends Control
 
+# =============================================================================
+# GAME OVER SCREEN
+# Uses preloaded resources for instant transitions
+# =============================================================================
+
 @onready var message_label: Label = $VBox/Message
 @onready var score_label: Label = $VBox/Score
 @onready var high_score_label: Label = $VBox/HighScore
@@ -15,7 +20,7 @@ func _ready() -> void:
 	# Set message and color based on score
 	var message: String
 	var color: Color
-	
+
 	if randi() % 6 == 0:
 		message = "Did you even jump?"
 		color = Color(0.983, 0.372, 0.692, 1.0)
@@ -49,4 +54,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("jump"):
-		get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+		# Use preloaded title screen if available
+		if ResourcePreloader.is_resource_loaded("res://scenes/title_screen.tscn"):
+			var scene := ResourcePreloader.get_title_screen_scene()
+			get_tree().change_scene_to_packed(scene)
+		else:
+			get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
