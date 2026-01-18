@@ -125,3 +125,10 @@ mesh = ExtResource("2_mesh")
 light_color = Color(1, 0.55, 0, 1)
 light_energy = 2.0
 omni_range = 4.0
+
+[node name="SkyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.5
+light_angular_distance = 2.0
+shadow_enabled = true

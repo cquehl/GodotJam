@@ -73,6 +73,11 @@ func _process(delta: float) -> void:
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed
+	# Rotate mesh so tail (-Z) trails behind (opposite to movement)
+	if velocity.length() > 0.01:
+		var forward := velocity.normalized()
+		# Look away from movement so -Z (tail) points backward
+		mesh.look_at(mesh.global_position - forward, Vector3.UP)
 
 func make_collectible() -> void:
 	is_collectible = true
@@ -133,13 +138,13 @@ func make_gold() -> void:
 	sphere = sphere.duplicate()
 	sphere.radius *= large_scale
 	collision_shape.shape = sphere
-	# Gold color with bright emission
-	var mat := mesh.get_surface_override_material(0).duplicate() as StandardMaterial3D
-	mat.albedo_color = Color(1.0, 0.85, 0.2, 1.0)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.8, 0.1, 1)
-	mat.emission_energy_multiplier = 2.0
-	mesh.set_surface_override_material(0, mat)
+	# Gold color - use electric shader with gold tint
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = electric_shader
+	shader_mat.set_shader_parameter("electric_color", Color(1.0, 0.85, 0.2, 1.0))
+	shader_mat.set_shader_parameter("core_color", Color(1.0, 1.0, 0.8, 1.0))
+	shader_mat.set_shader_parameter("glow_intensity", 3.0)
+	mesh.set_surface_override_material(0, shader_mat)
 
 
 func _on_body_entered(_body: Node3D) -> void:

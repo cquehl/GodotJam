@@ -1,40 +1,19 @@
-[gd_scene load_steps=16 format=3 uid="uid://cypksu2x31fcw"]
+[gd_scene load_steps=20 format=3 uid="uid://cypksu2x31fcw"]
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
 [ext_resource type="Script" uid="uid://cord3pj7715bo" path="res://scripts/droplet_spawner.gd" id="3_spawner"]
 [ext_resource type="Script" uid="uid://cepw50j0ie6bd" path="res://scripts/score_ui.gd" id="4_score_ui"]
-[ext_resource type="Shader" path="res://shaders/starfield_skybox.gdshader" id="5_starfield"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_eye"]
-size = Vector3(0.2, 0.3, 0.08)
-
-[sub_resource type="StandardMaterial3D" id="Material_face"]
-albedo_color = Color(0.05, 0.05, 0.05, 1)
-emission_enabled = true
-emission = Color(0.1, 0.1, 0.1, 1)
-
-[sub_resource type="TorusMesh" id="TorusMesh_mouth"]
-inner_radius = 0.3
-outer_radius = 0.38
-rings = 16
-ring_segments = 8
+[ext_resource type="Shader" uid="uid://d2h72krqti32h" path="res://shaders/starfield_skybox.gdshader" id="5_starfield"]
+[ext_resource type="Shader" uid="uid://bmdycm4nl7sds" path="res://shaders/galaxy_disc.gdshader" id="6_galaxy"]
+[ext_resource type="Texture2D" uid="uid://cb7ofso7aa7an" path="res://textures/Base Sprite_NPC.ase.png" id="7_noise1"]
+[ext_resource type="Texture2D" uid="uid://cav10n1ghwws" path="res://textures/esrui2-150x94.png" id="8_noise2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
 shader = ExtResource("5_starfield")
-shader_parameter/nebula_color_1 = Vector3(0.1, 0.05, 0.3)
-shader_parameter/nebula_color_2 = Vector3(0.3, 0.1, 0.5)
-shader_parameter/nebula_color_3 = Vector3(0.05, 0.1, 0.3)
-shader_parameter/nebula_intensity = 0.4
-shader_parameter/star_density = 0.5
-shader_parameter/star_brightness = 1.8
-shader_parameter/large_star_density = 0.02
-shader_parameter/star_color_tint = Vector3(0.9, 0.95, 1)
-shader_parameter/rotation_speed = 0.01
-shader_parameter/galaxy_density = 0.015
-shader_parameter/galaxy_brightness = 0.8
-shader_parameter/enable_twinkle = true
-shader_parameter/twinkle_speed = 2.0
+shader_parameter/space_color = Color(0.01, 0.01, 0.025, 1)
+shader_parameter/star_density = 0.6
+shader_parameter/star_brightness = 2.5
 
 [sub_resource type="Sky" id="Sky_1"]
 sky_material = SubResource("ShaderMaterial_starfield")
@@ -43,29 +22,32 @@ sky_material = SubResource("ShaderMaterial_starfield")
 background_mode = 2
 sky = SubResource("Sky_1")
 ambient_light_source = 3
-ambient_light_color = Color(0.3, 0.3, 0.4, 1)
-ambient_light_sky_contribution = 0.5
-ambient_light_energy = 0.4
-tonemap_mode = 2
-glow_enabled = true
-glow_intensity = 1.2
-glow_strength = 1.1
-glow_blend_mode = 0
+ambient_light_color = Color(0.3, 0.3, 0.35, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.5
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_platform"]
-top_radius = 5.0
-bottom_radius = 5.0
-height = 0.3
-rings = 1
+[sub_resource type="PlaneMesh" id="PlaneMesh_platform"]
+size = Vector2(12, 12)
+subdivide_width = 1
+subdivide_depth = 1
 
-[sub_resource type="StandardMaterial3D" id="Material_platform"]
-albedo_color = Color(0.15, 0.15, 0.2, 1)
-metallic = 0.7
-metallic_specular = 0.8
-roughness = 0.25
-emission_enabled = true
-emission = Color(0.05, 0.05, 0.15, 1)
-emission_energy_multiplier = 0.3
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
+render_priority = -10
+shader = ExtResource("6_galaxy")
+shader_parameter/dust_strength = 2.5
+shader_parameter/dust_color = Color(0.8, 0.34, 0.43, 1)
+shader_parameter/arm_count = 5.0
+shader_parameter/arm_compression = 0.12
+shader_parameter/core_radius = 0.28
+shader_parameter/core_color = Color(0.98, 0.8, 0.79, 1)
+shader_parameter/galaxy_radius = 0.55
+shader_parameter/rotation_speed = 0.08
+shader_parameter/sky_color = Color(0.23, 0.08, 0.14, 1)
+shader_parameter/star_size = 1.2
+shader_parameter/overall_alpha = 0.7
+shader_parameter/edge_fade = 0.55
+shader_parameter/noise_texture_1 = ExtResource("7_noise1")
+shader_parameter/noise_texture_2 = ExtResource("8_noise2")
 
 [sub_resource type="SphereMesh" id="SphereMesh_orb"]
 radial_segments = 32
@@ -81,6 +63,18 @@ emission_energy_multiplier = 0.8
 
 [sub_resource type="SphereShape3D" id="SphereShape_orb"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_eye"]
+size = Vector3(0.35, 0.45, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="Material_face"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_mouth"]
+inner_radius = 0.3
+outer_radius = 0.38
+rings = 16
+ring_segments = 8
+
 [node name="Game3D" type="Node3D"]
 script = ExtResource("1_controller")
 
@@ -92,16 +86,14 @@ far = 100.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 10, 0)
-shadow_enabled = true
-directional_shadow_mode = 1
+light_energy = 0.5
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
 
 [node name="Platform" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
-mesh = SubResource("CylinderMesh_platform")
-surface_material_override/0 = SubResource("Material_platform")
+mesh = SubResource("PlaneMesh_platform")
+surface_material_override/0 = SubResource("ShaderMaterial_galaxy")
 
 [node name="Orb" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
@@ -120,17 +112,18 @@ shape = SubResource("SphereShape_orb")
 [node name="Face" type="Node3D" parent="Orb"]
 
 [node name="LeftEye" type="MeshInstance3D" parent="Orb/Face"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.2, 0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.15, 0.95)
 mesh = SubResource("BoxMesh_eye")
 surface_material_override/0 = SubResource("Material_face")
 
 [node name="RightEye" type="MeshInstance3D" parent="Orb/Face"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.2, 0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.15, 0.95)
 mesh = SubResource("BoxMesh_eye")
 surface_material_override/0 = SubResource("Material_face")
 
 [node name="Mouth" type="MeshInstance3D" parent="Orb/Face"]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -0.15, 0.35)
+visible = false
 mesh = SubResource("TorusMesh_mouth")
 surface_material_override/0 = SubResource("Material_face")
 
