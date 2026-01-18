@@ -22,17 +22,18 @@ var water_shader: Shader = null
 var electric_shader: Shader = null
 
 func _ready() -> void:
-	# Defer initialization to allow ResourcePreloader to load first
+	# Defer initialization to run after ResourcePreloader's deferred _start_background_loading
 	call_deferred("_initialize_pool")
 
 func _initialize_pool() -> void:
-	# Get scene from preloader or load directly
+	# Try to get scene from preloader (may not be ready yet since it loads async)
+	# Falls back to synchronous load if preloader hasn't finished
 	if ResourcePreloader.is_resource_loaded(WATER_DROPLET_PATH):
 		_droplet_scene = ResourcePreloader.get_water_droplet_scene()
 	else:
 		_droplet_scene = load(WATER_DROPLET_PATH)
 
-	# Preload shaders
+	# Get pre-compiled shaders from ResourcePreloader (these load synchronously at startup)
 	water_shader = load("res://shaders/water_droplet.gdshader")
 	electric_shader = load("res://shaders/electric_orb.gdshader")
 

@@ -153,12 +153,12 @@ func _transition_to_game() -> void:
 	GameManager.is_powered_up = false
 	GameManager.is_immune = false
 
-	# Get the preloaded scene
+	# Get scene from preloader (preferred) or our own threaded load (fallback)
+	# We may have arrived here via either path in _check_threaded_load
 	var scene: PackedScene
 	if ResourcePreloader.is_game_scene_ready:
 		scene = ResourcePreloader.get_game_scene()
 	else:
-		# Fallback to direct threaded get
 		scene = ResourceLoader.load_threaded_get(GAME_SCENE_PATH) as PackedScene
 
 	get_tree().change_scene_to_packed(scene)

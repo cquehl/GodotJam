@@ -5,12 +5,12 @@ extends Node
 # Handles background music and sound effects with smooth transitions
 # =============================================================================
 
-# Music tracks - lofi beats to game to
+# Music tracks (.ogg for streaming/looping) - lofi beats to game to
 const MUSIC_TRACKS := [
 	"res://audio/music/lofi_chill_1.ogg",
 ]
 
-# Sound effects
+# Sound effects (.wav for low-latency playback)
 const SFX := {
 	"collect": "res://audio/sfx/collect.wav",
 	"hit": "res://audio/sfx/hit.wav",
@@ -66,8 +66,6 @@ func _ready() -> void:
 
 func _setup_audio_buses() -> void:
 	# Create audio buses if they don't exist
-	var bus_count := AudioServer.bus_count
-
 	# Check if Music bus exists
 	var music_bus_idx := AudioServer.get_bus_index(MUSIC_BUS)
 	if music_bus_idx == -1:

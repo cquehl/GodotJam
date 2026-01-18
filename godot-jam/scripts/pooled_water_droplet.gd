@@ -26,18 +26,18 @@ var _water_material: ShaderMaterial = null
 var _electric_material: ShaderMaterial = null
 var _gold_material: ShaderMaterial = null
 
-# Original scale for reset
+# Original state for reset
 var _original_mesh_scale: Vector3 = Vector3.ONE
 var _original_shadow_scale: Vector3 = Vector3.ONE
-var _original_collision_radius: float = 0.2
+var _original_collision_shape: SphereShape3D = null
 
 func _ready() -> void:
-	# Cache original scales
+	# Cache original scales and collision shape
 	_original_mesh_scale = mesh.scale
 	_original_shadow_scale = shadow.scale
 	var sphere := collision_shape.shape as SphereShape3D
 	if sphere:
-		_original_collision_radius = sphere.radius
+		_original_collision_shape = sphere.duplicate()
 
 	# Pre-create materials
 	_create_cached_materials()
@@ -91,10 +91,9 @@ func reset_droplet() -> void:
 	shadow.scale = _original_shadow_scale
 	position = Vector3.ZERO
 
-	# Reset collision shape
-	var sphere := collision_shape.shape as SphereShape3D
-	if sphere:
-		sphere.radius = _original_collision_radius
+	# Restore original collision shape (avoids orphaned shape resources)
+	if _original_collision_shape:
+		collision_shape.shape = _original_collision_shape.duplicate()
 
 	# Reset to water material
 	mesh.set_surface_override_material(0, _water_material)
@@ -201,12 +200,11 @@ func make_gold() -> void:
 	mesh.set_surface_override_material(0, _gold_material)
 
 func _scale_collision(scale_factor: float) -> void:
-	var sphere := collision_shape.shape as SphereShape3D
-	if sphere:
-		# Duplicate to avoid affecting other instances
-		sphere = sphere.duplicate()
-		sphere.radius = _original_collision_radius * scale_factor
-		collision_shape.shape = sphere
+	if _original_collision_shape:
+		# Create scaled copy from original to avoid compounding scales
+		var scaled_shape := _original_collision_shape.duplicate() as SphereShape3D
+		scaled_shape.radius = _original_collision_shape.radius * scale_factor
+		collision_shape.shape = scaled_shape
 
 func _return_to_pool() -> void:
 	DropletPool.return_droplet(self)
