@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://game_over_screen"]
+[gd_scene load_steps=2 format=3 uid="uid://c7ge72mr0aewh"]
 
-[ext_resource type="Script" path="res://scripts/game_over_screen.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bbugm3qeqqypv" path="res://scripts/game_over_screen.gd" id="1_script"]
 
 [node name="GameOverScreen" type="Control"]
 layout_mode = 3
@@ -62,7 +62,7 @@ horizontal_alignment = 1
 
 [node name="Continue" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 40
 text = "Press SPACE to continue"
 horizontal_alignment = 1
