@@ -25,21 +25,25 @@ ambient_light_source = 3
 ambient_light_color = Color(0.3, 0.3, 0.35, 1)
 ambient_light_sky_contribution = 0.0
 ambient_light_energy = 0.5
+glow_enabled = true
+glow_strength = 0.8
+glow_bloom = 0.1
+glow_hdr_threshold = 0.8
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_platform"]
 size = Vector2(12, 12)
-subdivide_width = 1
-subdivide_depth = 1
+subdivide_width = 32
+subdivide_depth = 32
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
 render_priority = -10
 shader = ExtResource("6_galaxy")
-shader_parameter/dust_strength = 2.5
-shader_parameter/dust_color = Color(0.8, 0.34, 0.43, 1)
-shader_parameter/arm_count = 5.0
+shader_parameter/dust_strength = 2.5430001207925
+shader_parameter/dust_color = Color(0.8792315, 8.3073675e-05, 0.6922006, 1)
+shader_parameter/arm_count = 3.486000165585
 shader_parameter/arm_compression = 0.12
 shader_parameter/core_radius = 0.28
-shader_parameter/core_color = Color(0.98, 0.8, 0.79, 1)
+shader_parameter/core_color = Color(0.70420504, 0, 0.8466836, 1)
 shader_parameter/galaxy_radius = 0.55
 shader_parameter/rotation_speed = 0.08
 shader_parameter/sky_color = Color(0.23, 0.08, 0.14, 1)

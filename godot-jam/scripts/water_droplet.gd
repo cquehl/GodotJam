@@ -9,6 +9,7 @@ var gold_height: float = 1.2  # Height requiring jump to collect
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var shadow: MeshInstance3D = $Shadow
+@onready var trail_particles: GPUParticles3D = $Mesh/TrailParticles
 
 # Preload shaders
 var water_shader: Shader = preload("res://shaders/water_droplet.gdshader")
@@ -81,7 +82,8 @@ func set_direction(dir: Vector3) -> void:
 
 func make_collectible() -> void:
 	is_collectible = true
-	# Apply electric shader for green collectibles
+	trail_particles.emitting = false
+	# Apply electric shader  for green collectibles
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = electric_shader
 	shader_mat.set_shader_parameter("electric_color", Color(0.2, 1.0, 0.3, 0.8))
@@ -126,6 +128,7 @@ func make_huge() -> void:
 func make_gold() -> void:
 	is_gold = true
 	is_collectible = true  # Gold orbs are collectible (won't kill)
+	trail_particles.emitting = false
 	# Move 50% slower
 	speed *= 0.5
 	# Huge scale
