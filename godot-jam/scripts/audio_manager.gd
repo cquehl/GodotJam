@@ -188,14 +188,27 @@ func _get_or_load_music(path: String) -> AudioStream:
 	if _cached_music.has(path):
 		return _cached_music[path]
 
-	# Check if threaded load is complete
+	# Check threaded load status
 	var status := ResourceLoader.load_threaded_get_status(path)
-	if status == ResourceLoader.THREAD_LOAD_LOADED:
-		var stream := ResourceLoader.load_threaded_get(path) as AudioStream
-		_cached_music[path] = stream
-		return stream
 
-	# Not loaded yet - load synchronously (fallback)
+	match status:
+		ResourceLoader.THREAD_LOAD_LOADED:
+			var stream := ResourceLoader.load_threaded_get(path) as AudioStream
+			_cached_music[path] = stream
+			return stream
+
+		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			# Wait for threaded load to complete (blocking but avoids conflict)
+			while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				OS.delay_msec(10)
+			# Now get the loaded resource
+			var loaded_status := ResourceLoader.load_threaded_get_status(path)
+			if loaded_status == ResourceLoader.THREAD_LOAD_LOADED:
+				var stream := ResourceLoader.load_threaded_get(path) as AudioStream
+				_cached_music[path] = stream
+				return stream
+
+	# Not loading or failed - load synchronously
 	if ResourceLoader.exists(path):
 		var stream := load(path) as AudioStream
 		_cached_music[path] = stream
