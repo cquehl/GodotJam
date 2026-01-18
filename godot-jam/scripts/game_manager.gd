@@ -55,7 +55,7 @@ func game_over() -> void:
 	last_score = score
 	if high_score < score:
 		high_score = score
-	get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+	get_tree().change_scene_to_file("res://scenes/game_over_screen.tscn")
 	reset_score()
 
 func start_game() -> void:

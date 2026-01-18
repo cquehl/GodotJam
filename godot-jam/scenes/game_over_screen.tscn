@@ -1,0 +1,68 @@
+[gd_scene load_steps=2 format=3 uid="uid://game_over_screen"]
+
+[ext_resource type="Script" path="res://scripts/game_over_screen.gd" id="1_script"]
+
+[node name="GameOverScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.15, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Message" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Message"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Score" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 120
+text = "Your Score: 0"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="HighScore" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "High Score: 0"
+horizontal_alignment = 1
+
+[node name="Continue" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Press SPACE to continue"
+horizontal_alignment = 1
