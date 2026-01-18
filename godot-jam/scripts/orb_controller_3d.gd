@@ -105,9 +105,14 @@ func _handle_movement(delta: float) -> void:
 	# Clamp to circular platform
 	if position_xz.length() > GameManager.platform_radius:
 		position_xz = position_xz.normalized() * GameManager.platform_radius
-		# Bounce off edge slightly
+		# Decompose velocity into radial and tangential components
 		var normal := position_xz.normalized()
-		velocity_xz = velocity_xz.slide(normal) * EDGE_BOUNCE_FACTOR
+		var radial_velocity := velocity_xz.dot(normal) * normal
+		var tangential_velocity := velocity_xz - radial_velocity
+		# Only dampen the outward radial component, preserve tangential for smooth sliding
+		if radial_velocity.dot(normal) > 0:  # Moving outward
+			velocity_xz = tangential_velocity + radial_velocity * -EDGE_BOUNCE_FACTOR
+		# If moving inward, keep full velocity
 
 func _handle_jumping(delta: float) -> void:
 	# Update timers
