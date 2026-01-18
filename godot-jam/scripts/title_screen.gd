@@ -23,6 +23,9 @@ var _loading_bar: ProgressBar = null
 var _preload_label: Label = null
 
 func _ready() -> void:
+	# Start menu music (deferred to ensure AudioManager is ready)
+	call_deferred("_start_menu_music")
+
 	# If game scene is already loaded, we're ready immediately
 	if Preloader.is_game_scene_ready:
 		start_prompt.text = "Press SPACE to start"
@@ -34,6 +37,9 @@ func _ready() -> void:
 		_setup_preload_indicator()
 		Preloader.loading_progress.connect(_on_loading_progress)
 		Preloader.all_resources_loaded.connect(_on_all_resources_loaded)
+
+func _start_menu_music() -> void:
+	AudioManager.play_menu_music()
 
 func _setup_preload_indicator() -> void:
 	_preload_label = Label.new()

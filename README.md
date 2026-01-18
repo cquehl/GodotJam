@@ -1,35 +1,54 @@
-# GodotJam
-TODO:
+# FIREBALL - GodotJam
 
-[ ] the #1 todo is loading on the Itch.Io site on HTML through its features or whatever... super lag when clicking contineu -- and super lag during the firsdt 5 seconds of play.. just load it - they are going to click space bar.
- 
-[ ] Smooth against hte wall - dont get "stuck" for pushing the boundary
+A dodge-and-collect arcade game built with Godot 4.5. Control a flaming orb on a circular platform, avoid water droplets, and collect points.
 
-All "blue" raindrop orbs now have this type of texture -- https://godotshaders.com/shader/fireball-or-candle-fire-shader/
-add 7 layers of obfuscation so it is a legally different design
+## TODO
 
-all "green" point orbs need to have a yellow and white lighting circle: https://godotshaders.com/shader/electric-ball-canvas-item/
+- [ ] Optimize HTML5 export for itch.io (reduce lag on initial load and first 5 seconds of play)
+- [ ] Smooth wall collision (prevent "sticking" to platform edge)
+- [ ] Add fire shader obfuscation layers (legal differentiation from reference)
 
+## Completed
 
+- [X] Add shadows to rain drops
+- [X] Add instructions to title screen
+- [X] Larger rain drops fired at player position at 5+ points
+- [X] Multi-barrage system (1+ second apart) at 7+ points
+- [X] Export as HTML5 to itch.io
+- [X] Loading feedback ("Starting..." animation)
+- [X] Resource preloading system
+- [X] Mega droplets at score 20+
+- [X] High score display on game over
+- [X] Glowing platform rim indicator
 
+## Code Review Notes
 
-DID:
-[X] Add shadows to the rain drops
-rain drops should spawn further out closer to edge of rendering
-[X] Add instructions to title screen
-[X] once you collect 5 green points - introduce a larger rain drop that is "fired towards" the flames current position.
-[X] once you collect 7 green points, now the larger rain drops are fired in an array with one second apart. rnd 3 or 5.
-N/A. figure out what to do w/ jumping mechanic, maybe thers a long roller that crosses the entire of the disc that must be jumped over maybe once every minute and then increases with each point until its once every 10 seconds?
+### Architecture
 
-Done: export as html to itch.io -- I read C# in godot might not support web export ...
-itch site markdown for MiniJam #50
-Credit https://godotshaders.com/shader/stylized-botw-fire/ for the fire animation
+**Strengths:**
+- Object pooling (`droplet_pool.gd`) for efficient droplet management
+- Signal-based architecture keeps systems decoupled
+- Resource preloading prevents stutters on scene transitions
+- Audio management with SFX pool and crossfading
 
-----
-update score UI - can't see it
-[X] when clicking spacebar to start, let the user know game is loading imedieatly then load the game (takes about 7 seconds to load they need instant feedback)
-[X] figure out loading, maybe pre load?
+**Areas for improvement:**
+- Consider consolidating `Preloader` and `DropletPool` autoloads
+- State duplication between `title_screen.gd` and `game_manager.gd` - title screen should call `GameManager.start_game()`
 
-[X] get a giant barrage if you hit 20? or maybe randomly? one too big to jump over
-[X] Show the score and High Score on the game over
-friction/sticky against edge - want to be smooth
+### Known Issues (Moderate)
+
+1. **Inconsistent `gold_height` values** - `water_droplet.gd` uses 1.2, `pooled_water_droplet.gd` uses 0.3
+2. **Magic numbers** throughout code (camera angle compensation 1.4, spawn distance +4.0, etc.)
+3. **Unused `can_jump` variable** in `orb_controller_3d.gd:127`
+
+### Performance Notes
+
+- Object pooling, shader caching, and threaded resource loading are well-implemented
+- `Time.get_ticks_msec()` called every frame in droplet bobbing - acceptable but could use delta accumulation
+- Material references could be cached in `_update_powerup_visuals()`
+
+## Credits
+
+- Fire animation shader: https://godotshaders.com/shader/stylized-botw-fire/
+- Electric ball shader: https://godotshaders.com/shader/electric-ball-canvas-item/
+- Menu music: CC Zero / Public Domain by iamoneabe - https://allmylinks.com/iamoneabe

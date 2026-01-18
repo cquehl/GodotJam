@@ -5,9 +5,10 @@ extends Node
 # Handles background music and sound effects with smooth transitions
 # =============================================================================
 
-# Music tracks (.ogg for streaming/looping) - lofi beats to game to
-const MUSIC_TRACKS := [
-	"res://audio/music/lofi_chill_1.ogg",
+# Music tracks
+const MENU_MUSIC := "res://audio/music/_menue_music.mp3"
+const GAMEPLAY_TRACKS := [
+	"res://audio/music/_game_music.mp3",
 ]
 
 # Sound effects (.wav for low-latency playback)
@@ -53,6 +54,9 @@ const SFX_POOL_SIZE := 8
 # Cached audio streams
 var _cached_music: Dictionary = {}
 var _cached_sfx: Dictionary = {}
+
+# Track what type of music is playing
+var _playing_menu_music: bool = false
 
 func _ready() -> void:
 	_setup_audio_buses()
@@ -107,8 +111,12 @@ func _setup_sfx_pool() -> void:
 		_sfx_players.append(player)
 
 func _preload_audio() -> void:
-	# Preload music tracks
-	for track_path in MUSIC_TRACKS:
+	# Preload menu music
+	if ResourceLoader.exists(MENU_MUSIC):
+		_cached_music[MENU_MUSIC] = load(MENU_MUSIC)
+
+	# Preload gameplay tracks
+	for track_path in GAMEPLAY_TRACKS:
 		if ResourceLoader.exists(track_path):
 			_cached_music[track_path] = load(track_path)
 
@@ -126,14 +134,8 @@ func _connect_game_signals() -> void:
 	GameManager.game_over_triggered.connect(_on_game_over)
 
 func _start_music() -> void:
-	if not music_enabled:
-		return
-
-	if _cached_music.is_empty():
-		return
-
-	# Pick a random starting track
-	play_random_track()
+	# Don't auto-start music - let scenes control what plays
+	pass
 
 func _process(delta: float) -> void:
 	if _is_crossfading:
@@ -171,10 +173,10 @@ func play_track(index: int) -> void:
 	if not music_enabled:
 		return
 
-	if index < 0 or index >= MUSIC_TRACKS.size():
+	if index < 0 or index >= GAMEPLAY_TRACKS.size():
 		return
 
-	var track_path: String = MUSIC_TRACKS[index]
+	var track_path: String = GAMEPLAY_TRACKS[index]
 	if not _cached_music.has(track_path):
 		return
 
@@ -198,12 +200,12 @@ func play_track(index: int) -> void:
 		_active_player.play()
 
 func play_random_track() -> void:
-	if MUSIC_TRACKS.is_empty():
+	if GAMEPLAY_TRACKS.is_empty():
 		return
 
 	var available_tracks: Array[int] = []
-	for i in MUSIC_TRACKS.size():
-		if i != _current_track_index and _cached_music.has(MUSIC_TRACKS[i]):
+	for i in GAMEPLAY_TRACKS.size():
+		if i != _current_track_index and _cached_music.has(GAMEPLAY_TRACKS[i]):
 			available_tracks.append(i)
 
 	if available_tracks.is_empty():
@@ -216,8 +218,39 @@ func play_random_track() -> void:
 	play_track(random_index)
 
 func play_next_track() -> void:
-	var next_index := (_current_track_index + 1) % MUSIC_TRACKS.size()
+	var next_index := (_current_track_index + 1) % GAMEPLAY_TRACKS.size()
 	play_track(next_index)
+
+func play_menu_music() -> void:
+	if not music_enabled:
+		return
+	if not _cached_music.has(MENU_MUSIC):
+		return
+
+	_playing_menu_music = true
+	var stream: AudioStream = _cached_music[MENU_MUSIC]
+
+	if _active_player.playing:
+		# Crossfade to menu music
+		var new_player := _music_player_a if _active_player == _music_player_b else _music_player_b
+		new_player.stream = stream
+		new_player.volume_db = linear_to_db(0.0)
+		new_player.play()
+
+		_active_player = new_player
+		_is_crossfading = true
+		_crossfade_progress = 0.0
+	else:
+		_active_player.stream = stream
+		_active_player.volume_db = linear_to_db(music_volume)
+		_active_player.play()
+
+func play_gameplay_music() -> void:
+	if not music_enabled:
+		return
+
+	_playing_menu_music = false
+	play_random_track()
 
 func stop_music(fade_out: float = 1.0) -> void:
 	if fade_out <= 0:
@@ -293,8 +326,12 @@ func _get_available_sfx_player() -> AudioStreamPlayer:
 
 func _on_music_finished(player: AudioStreamPlayer) -> void:
 	if player == _active_player:
-		# Play next track
-		play_random_track()
+		if _playing_menu_music:
+			# Loop menu music
+			play_menu_music()
+		else:
+			# Play next gameplay track
+			play_random_track()
 
 func _on_score_changed(new_score: int) -> void:
 	if new_score > 0:

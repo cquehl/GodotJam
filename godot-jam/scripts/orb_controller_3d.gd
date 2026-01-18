@@ -41,6 +41,9 @@ const JUMP_CUT_MULTIPLIER: float = 0.4  # Velocity multiplier when releasing jum
 const SQUASH_AMOUNT: float = 0.3  # How much to squash/stretch
 
 func _ready() -> void:
+	# Start gameplay music
+	AudioManager.play_gameplay_music()
+
 	# Scale platform to match GameManager radius (mesh default is 5.0)
 	var scale_factor := GameManager.platform_radius / 5.0
 	platform.scale = Vector3(scale_factor, 1.0, scale_factor)

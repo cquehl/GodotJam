@@ -17,6 +17,7 @@ var spawn_timer: float = 0.0
 var next_spawn_time: float = 1.0
 var orb: MeshInstance3D = null
 var _use_pool: bool = false
+var _pending_barrage_timers: Array[SceneTreeTimer] = []
 
 func _ready() -> void:
 	_reset_timer()
@@ -36,6 +37,15 @@ func _ready() -> void:
 
 func _on_pool_ready() -> void:
 	_use_pool = true
+
+func _exit_tree() -> void:
+	# Cancel all pending barrage timers to prevent memory leaks
+	for timer in _pending_barrage_timers:
+		if is_instance_valid(timer) and timer.time_left > 0:
+			# Disconnect our callback to prevent it from firing
+			if timer.timeout.is_connected(_on_barrage_timer_timeout):
+				timer.timeout.disconnect(_on_barrage_timer_timeout)
+	_pending_barrage_timers.clear()
 
 func _on_score_changed(new_score: int) -> void:
 	if new_score < 3:
@@ -133,7 +143,15 @@ func _spawn_targeted_barrage(count: int) -> void:
 	# Spawn multiple droplets with delays
 	for i in range(count):
 		var timer := get_tree().create_timer(i * 1.0)
-		timer.timeout.connect(_spawn_targeted_droplet)
+		timer.timeout.connect(_on_barrage_timer_timeout.bind(timer))
+		_pending_barrage_timers.append(timer)
+
+func _on_barrage_timer_timeout(timer: SceneTreeTimer) -> void:
+	# Remove from pending list
+	_pending_barrage_timers.erase(timer)
+	# Spawn the droplet (if we're still valid)
+	if is_inside_tree():
+		_spawn_targeted_droplet()
 
 func _process(delta: float) -> void:
 	spawn_timer += delta

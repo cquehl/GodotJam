@@ -51,7 +51,7 @@ func _initialize_pool() -> void:
 
 func _create_pooled_droplet() -> Node:
 	var droplet := _droplet_scene.instantiate()
-	droplet.set_script(load("res://scripts/pooled_water_droplet.gd"))
+	# Scene already has pooled_water_droplet.gd attached
 	droplet.process_mode = Node.PROCESS_MODE_DISABLED
 	droplet.visible = false
 	_pool_parent.add_child(droplet)
@@ -110,7 +110,7 @@ func return_droplet(droplet: Node) -> void:
 	droplet.reset_droplet()
 	droplet.process_mode = Node.PROCESS_MODE_DISABLED
 	droplet.visible = false
-
+ 
 	# Reparent to pool storage if needed
 	var parent = droplet.get_parent()
 	if parent and parent != _pool_parent:
