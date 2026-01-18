@@ -55,26 +55,37 @@ func _ready() -> void:
 	# Start background preloading immediately
 	call_deferred("_start_background_loading")
 
-func _start_background_loading() -> void:
-	# Pre-compile shaders first (they're small but cause stutter)
-	_precompile_shaders()
+var _shader_index: int = 0
 
-	# Queue resources for background loading
+func _start_background_loading() -> void:
+	# Queue resources for background loading FIRST (scenes are more important)
 	_loading_queue.clear()
 	for path in PRELOAD_ORDER:
 		_loading_queue.append(path)
 	_total_to_load = _loading_queue.size()
 	_loaded_count = 0
 
-	# Start loading the first resource
+	# Start loading scenes - shaders will compile gradually after
 	_load_next_resource()
 
-func _precompile_shaders() -> void:
-	# Load and cache all shaders to trigger compilation
-	for shader_path in SHADER_PATHS:
-		var shader := load(shader_path) as Shader
-		if shader:
-			_compiled_shaders.append(shader)
+	# Start shader compilation after a short delay (let first frame render)
+	get_tree().create_timer(0.1).timeout.connect(_compile_next_shader)
+
+func _compile_next_shader() -> void:
+	# Compile one shader per frame to avoid stutters
+	if _shader_index >= SHADER_PATHS.size():
+		return
+
+	var shader_path: String = SHADER_PATHS[_shader_index]
+	var shader := load(shader_path) as Shader
+	if shader:
+		_compiled_shaders.append(shader)
+
+	_shader_index += 1
+
+	# Schedule next shader compilation
+	if _shader_index < SHADER_PATHS.size():
+		call_deferred("_compile_next_shader")
 
 func _load_next_resource() -> void:
 	if _loading_queue.is_empty():

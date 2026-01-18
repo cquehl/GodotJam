@@ -111,20 +111,17 @@ func _setup_sfx_pool() -> void:
 		_sfx_players.append(player)
 
 func _preload_audio() -> void:
-	# Preload menu music
-	if ResourceLoader.exists(MENU_MUSIC):
-		_cached_music[MENU_MUSIC] = load(MENU_MUSIC)
-
-	# Preload gameplay tracks
-	for track_path in GAMEPLAY_TRACKS:
-		if ResourceLoader.exists(track_path):
-			_cached_music[track_path] = load(track_path)
-
-	# Preload sound effects
+	# Only preload small SFX synchronously - music is loaded on-demand
 	for sfx_name in SFX:
 		var sfx_path: String = SFX[sfx_name]
 		if ResourceLoader.exists(sfx_path):
 			_cached_sfx[sfx_name] = load(sfx_path)
+
+	# Start loading menu music in background (non-blocking)
+	if ResourceLoader.exists(MENU_MUSIC):
+		ResourceLoader.load_threaded_request(MENU_MUSIC)
+
+	# DON'T preload gameplay music - it's 12MB and not needed until game starts
 
 func _connect_game_signals() -> void:
 	# Connect to game events for automatic SFX
@@ -169,6 +166,27 @@ func _update_music_volume() -> void:
 # PUBLIC API - MUSIC
 # =============================================================================
 
+## Get music from cache, or load it (checking threaded loader first)
+func _get_or_load_music(path: String) -> AudioStream:
+	# Already cached
+	if _cached_music.has(path):
+		return _cached_music[path]
+
+	# Check if threaded load is complete
+	var status := ResourceLoader.load_threaded_get_status(path)
+	if status == ResourceLoader.THREAD_LOAD_LOADED:
+		var stream := ResourceLoader.load_threaded_get(path) as AudioStream
+		_cached_music[path] = stream
+		return stream
+
+	# Not loaded yet - load synchronously (fallback)
+	if ResourceLoader.exists(path):
+		var stream := load(path) as AudioStream
+		_cached_music[path] = stream
+		return stream
+
+	return null
+
 func play_track(index: int) -> void:
 	if not music_enabled:
 		return
@@ -177,11 +195,11 @@ func play_track(index: int) -> void:
 		return
 
 	var track_path: String = GAMEPLAY_TRACKS[index]
-	if not _cached_music.has(track_path):
+	var stream := _get_or_load_music(track_path)
+	if stream == null:
 		return
 
 	_current_track_index = index
-	var stream: AudioStream = _cached_music[track_path]
 
 	if _active_player.playing:
 		# Crossfade to new track
@@ -203,16 +221,15 @@ func play_random_track() -> void:
 	if GAMEPLAY_TRACKS.is_empty():
 		return
 
+	# Pick any track except the current one (if possible)
+	if GAMEPLAY_TRACKS.size() == 1:
+		play_track(0)
+		return
+
 	var available_tracks: Array[int] = []
 	for i in GAMEPLAY_TRACKS.size():
-		if i != _current_track_index and _cached_music.has(GAMEPLAY_TRACKS[i]):
+		if i != _current_track_index:
 			available_tracks.append(i)
-
-	if available_tracks.is_empty():
-		# Only one track, replay it
-		if _cached_music.size() > 0:
-			play_track(0)
-		return
 
 	var random_index: int = available_tracks[randi() % available_tracks.size()]
 	play_track(random_index)
@@ -224,11 +241,13 @@ func play_next_track() -> void:
 func play_menu_music() -> void:
 	if not music_enabled:
 		return
-	if not _cached_music.has(MENU_MUSIC):
-		return
 
 	_playing_menu_music = true
-	var stream: AudioStream = _cached_music[MENU_MUSIC]
+
+	# Get or load menu music (handles threaded loading)
+	var stream := _get_or_load_music(MENU_MUSIC)
+	if stream == null:
+		return
 
 	if _active_player.playing:
 		# Crossfade to menu music
