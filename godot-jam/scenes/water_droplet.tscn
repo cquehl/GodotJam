@@ -1,6 +1,6 @@
 [gd_scene load_steps=15 format=3 uid="uid://bbnqgdr03pv8f"]
 
-[ext_resource type="Script" uid="uid://ll462rhkixch" path="res://scripts/water_droplet.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://4ndp6imyngis" path="res://scripts/pooled_water_droplet.gd" id="1_script"]
 [ext_resource type="Shader" uid="uid://dxehmxtwlhspn" path="res://shaders/water_droplet.gdshader" id="2_shader"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_drop"]

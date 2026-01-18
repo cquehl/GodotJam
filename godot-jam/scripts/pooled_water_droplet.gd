@@ -49,8 +49,15 @@ func _ready() -> void:
 		area_entered.connect(_on_area_entered)
 
 func _create_cached_materials() -> void:
-	var water_shader := DropletPool.water_shader
-	var electric_shader := DropletPool.electric_shader
+	# Get shaders from pool if available, otherwise load directly
+	var water_shader: Shader
+	var electric_shader: Shader
+	if DropletPool.water_shader:
+		water_shader = DropletPool.water_shader
+		electric_shader = DropletPool.electric_shader
+	else:
+		water_shader = load("res://shaders/water_droplet.gdshader")
+		electric_shader = load("res://shaders/electric_orb.gdshader")
 
 	# Water material (blue hazard)
 	_water_material = ShaderMaterial.new()
@@ -205,7 +212,11 @@ func _scale_collision(scale_factor: float) -> void:
 		collision_shape.shape = scaled_shape
 
 func _return_to_pool() -> void:
-	DropletPool.return_droplet(self)
+	if DropletPool.is_ready():
+		DropletPool.return_droplet(self)
+	else:
+		# Fallback: destroy if pool isn't ready
+		queue_free()
 
 func _on_body_entered(_body: Node3D) -> void:
 	if _is_active:

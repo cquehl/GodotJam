@@ -106,7 +106,7 @@ func game_over() -> void:
 	game_over_triggered.emit()
 
 	# Clear active droplets from pool
-	if DropletPool and DropletPool.is_ready():
+	if DropletPool.is_ready():
 		DropletPool.clear_active_droplets()
 
 	# Use preloaded scene if available
@@ -131,7 +131,7 @@ func start_game() -> void:
 	immune_timer = 0.0
 
 	# Clear any leftover droplets
-	if DropletPool and DropletPool.is_ready():
+	if DropletPool.is_ready():
 		DropletPool.clear_active_droplets()
 
 	# Use preloaded scene if available
