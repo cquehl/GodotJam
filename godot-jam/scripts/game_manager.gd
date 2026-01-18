@@ -38,7 +38,6 @@ const IMMUNITY_DURATION: float = 2.0
 # =============================================================================
 # SIGNALS
 # =============================================================================
-signal settings_changed
 signal score_changed(new_score: int)
 signal game_paused(paused: bool)
 signal power_up_started
