@@ -23,6 +23,7 @@ var high_score: int = 0
 var last_score: int = 0
 var game_time: float = 0.0
 var game_active: bool = false
+var _transitioning: bool = false
 
 # =============================================================================
 # POWER-UP STATE
@@ -44,13 +45,14 @@ signal power_up_started
 signal power_up_ended
 signal immunity_started
 signal immunity_ended
+signal game_over_triggered
 
 # =============================================================================
 # METHODS
 # =============================================================================
 func add_score(amount: int) -> void:
 	score += amount
-	score_changed.emit(score) 
+	score_changed.emit(score)
 
 func reset_score() -> void:
 	score = 0
@@ -92,12 +94,31 @@ func end_power_up() -> void:
 	immunity_started.emit()
 
 func game_over() -> void:
+	if _transitioning:
+		return
+
+	_transitioning = true
 	game_active = false
 	last_score = score
 	if high_score < score:
 		high_score = score
-	get_tree().change_scene_to_file("res://scenes/game_over_screen.tscn")
+
+	game_over_triggered.emit()
+
+	# Clear active droplets from pool
+	if DropletPool and DropletPool.is_ready():
+		DropletPool.clear_active_droplets()
+
+	# Use preloaded scene if available
+	if ResourcePreloader.is_game_over_ready:
+		var scene := ResourcePreloader.get_game_over_scene()
+		get_tree().change_scene_to_packed(scene)
+	else:
+		# Fallback to file-based load
+		get_tree().change_scene_to_file("res://scenes/game_over_screen.tscn")
+
 	reset_score()
+	_transitioning = false
 
 func start_game() -> void:
 	reset_score()
@@ -107,4 +128,14 @@ func start_game() -> void:
 	is_immune = false
 	power_up_timer = 0.0
 	immune_timer = 0.0
-	get_tree().change_scene_to_file("res://scenes/game_3d.tscn")
+
+	# Clear any leftover droplets
+	if DropletPool and DropletPool.is_ready():
+		DropletPool.clear_active_droplets()
+
+	# Use preloaded scene if available
+	if ResourcePreloader.is_game_scene_ready:
+		var scene := ResourcePreloader.get_game_scene()
+		get_tree().change_scene_to_packed(scene)
+	else:
+		get_tree().change_scene_to_file("res://scenes/game_3d.tscn")
