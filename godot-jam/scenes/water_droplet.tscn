@@ -15,7 +15,7 @@ shader = ExtResource("2_shader")
 shader_parameter/deep_color = Color(0.1, 0.4, 1, 1)
 shader_parameter/mid_color = Color(0.3, 0.6, 1, 1)
 shader_parameter/rim_color = Color(0.5, 0.9, 1, 1)
-shader_parameter/rim_power = 2.0
+shader_parameter/rim_power = 1.0
 shader_parameter/rim_intensity = 1.2
 shader_parameter/inner_glow = 0.5
 shader_parameter/tail_length = 3.0
@@ -73,7 +73,7 @@ shading_mode = 0
 albedo_color = Color(0, 0, 0, 0.35)
 
 [sub_resource type="SphereShape3D" id="SphereShape_collision"]
-radius = 0.2
+radius = 0.15
 
 [node name="WaterDroplet" type="Area3D"]
 collision_layer = 2
@@ -85,9 +85,9 @@ mesh = SubResource("SphereMesh_drop")
 surface_material_override/0 = SubResource("ShaderMaterial_water")
 
 [node name="TrailParticles" type="GPUParticles3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.53014743)
-amount = 20
-lifetime = 0.4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.28254706)
+amount = 36
+lifetime = 1.6199999999999999
 process_material = SubResource("ParticleProcessMaterial_trail")
 draw_pass_1 = SubResource("SphereMesh_trail_particle")
 
