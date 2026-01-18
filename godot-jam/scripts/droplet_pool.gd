@@ -22,18 +22,18 @@ var water_shader: Shader = null
 var electric_shader: Shader = null
 
 func _ready() -> void:
-	# Defer initialization to run after ResourcePreloader's deferred _start_background_loading
+	# Defer initialization to run after Preloader's deferred _start_background_loading
 	call_deferred("_initialize_pool")
 
 func _initialize_pool() -> void:
 	# Try to get scene from preloader (may not be ready yet since it loads async)
 	# Falls back to synchronous load if preloader hasn't finished
-	if ResourcePreloader.is_resource_loaded(WATER_DROPLET_PATH):
-		_droplet_scene = ResourcePreloader.get_water_droplet_scene()
+	if Preloader.is_resource_loaded(WATER_DROPLET_PATH):
+		_droplet_scene = Preloader.get_water_droplet_scene()
 	else:
 		_droplet_scene = load(WATER_DROPLET_PATH)
 
-	# Get pre-compiled shaders from ResourcePreloader (these load synchronously at startup)
+	# Get pre-compiled shaders from Preloader (these load synchronously at startup)
 	water_shader = load("res://shaders/water_droplet.gdshader")
 	electric_shader = load("res://shaders/electric_orb.gdshader")
 
@@ -64,19 +64,32 @@ func get_droplet() -> Node:
 		push_warning("DropletPool not initialized yet")
 		return null
 
-	var droplet: Node
+	var droplet: Node = null
 
-	if _available_pool.is_empty():
+	# Try to get a valid droplet from available pool
+	while not _available_pool.is_empty() and droplet == null:
+		var candidate = _available_pool.pop_back()
+		if is_instance_valid(candidate):
+			droplet = candidate
+		# Invalid droplets are just discarded
+
+	if droplet == null:
 		# Expand pool if under max size
 		if _active_droplets.size() < MAX_POOL_SIZE:
 			droplet = _create_pooled_droplet()
 			_available_pool.erase(droplet)
 		else:
 			# Recycle oldest active droplet
-			droplet = _active_droplets.pop_front()
-			droplet.reset_droplet()
-	else:
-		droplet = _available_pool.pop_back()
+			while not _active_droplets.is_empty():
+				var candidate = _active_droplets.pop_front()
+				if is_instance_valid(candidate):
+					droplet = candidate
+					droplet.reset_droplet()
+					break
+			if droplet == null:
+				# All droplets invalid, create new one
+				droplet = _create_pooled_droplet()
+				_available_pool.erase(droplet)
 
 	_active_droplets.append(droplet)
 	droplet.process_mode = Node.PROCESS_MODE_INHERIT
@@ -87,6 +100,10 @@ func get_droplet() -> Node:
 
 ## Return a droplet to the pool
 func return_droplet(droplet: Node) -> void:
+	if not is_instance_valid(droplet):
+		_active_droplets.erase(droplet)
+		return
+
 	if droplet in _active_droplets:
 		_active_droplets.erase(droplet)
 
@@ -95,8 +112,9 @@ func return_droplet(droplet: Node) -> void:
 	droplet.visible = false
 
 	# Reparent to pool storage if needed
-	if droplet.get_parent() != _pool_parent:
-		droplet.get_parent().remove_child(droplet)
+	var parent = droplet.get_parent()
+	if parent and parent != _pool_parent:
+		parent.remove_child(droplet)
 		_pool_parent.add_child(droplet)
 
 	if droplet not in _available_pool:
@@ -105,7 +123,10 @@ func return_droplet(droplet: Node) -> void:
 ## Clear all active droplets (e.g., on game restart)
 func clear_active_droplets() -> void:
 	for droplet in _active_droplets.duplicate():
-		return_droplet(droplet)
+		if is_instance_valid(droplet):
+			return_droplet(droplet)
+		else:
+			_active_droplets.erase(droplet)
 
 ## Get pool statistics
 func get_stats() -> Dictionary:

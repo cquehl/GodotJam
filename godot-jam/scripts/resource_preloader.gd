@@ -60,7 +60,9 @@ func _start_background_loading() -> void:
 	_precompile_shaders()
 
 	# Queue resources for background loading
-	_loading_queue = PRELOAD_ORDER.duplicate()
+	_loading_queue.clear()
+	for path in PRELOAD_ORDER:
+		_loading_queue.append(path)
 	_total_to_load = _loading_queue.size()
 	_loaded_count = 0
 

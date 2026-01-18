@@ -10,7 +10,7 @@ var speed: float = 6.0
 var is_collectible: bool = false
 var is_gold: bool = false
 var base_height: float = 0.3
-var gold_height: float = 1.2
+var gold_height: float = 0.3
 
 var _lifetime_timer: float = 0.0
 var _max_lifetime: float = 6.0
@@ -75,6 +75,7 @@ func _create_cached_materials() -> void:
 func activate() -> void:
 	_is_active = true
 	_lifetime_timer = 0.0
+	collision_shape.disabled = false
 	trail_particles.emitting = true
 
 ## Reset to default state for pooling
@@ -89,7 +90,10 @@ func reset_droplet() -> void:
 	# Reset transforms
 	mesh.scale = _original_mesh_scale
 	shadow.scale = _original_shadow_scale
-	position = Vector3.ZERO
+	position = Vector3(0, -100, 0)  # Position far below play area
+
+	# Disable collision while pooled
+	collision_shape.disabled = true
 
 	# Restore original collision shape (avoids orphaned shape resources)
 	if _original_collision_shape:
@@ -134,7 +138,10 @@ func _update_powerup_visuals(delta: float) -> void:
 	if not mat:
 		return
 
-	var current_color := mat.get_shader_parameter("water_color") as Color
+	var color_param = mat.get_shader_parameter("water_color")
+	if not color_param is Color:
+		return
+	var current_color: Color = color_param
 	var target_alpha := 0.85
 
 	if GameManager.is_powered_up:
@@ -210,10 +217,12 @@ func _return_to_pool() -> void:
 	DropletPool.return_droplet(self)
 
 func _on_body_entered(_body: Node3D) -> void:
-	_handle_collision()
+	if _is_active:
+		_handle_collision()
 
 func _on_area_entered(_area: Area3D) -> void:
-	_handle_collision()
+	if _is_active:
+		_handle_collision()
 
 func _handle_collision() -> void:
 	if is_gold:

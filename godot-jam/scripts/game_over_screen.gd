@@ -55,8 +55,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("jump"):
 		# Use preloaded title screen if available
-		if ResourcePreloader.is_resource_loaded("res://scenes/title_screen.tscn"):
-			var scene := ResourcePreloader.get_title_screen_scene()
+		if Preloader.is_resource_loaded("res://scenes/title_screen.tscn"):
+			var scene := Preloader.get_title_screen_scene()
 			get_tree().change_scene_to_packed(scene)
 		else:
 			get_tree().change_scene_to_file("res://scenes/title_screen.tscn")

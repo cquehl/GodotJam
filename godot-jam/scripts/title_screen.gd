@@ -23,36 +23,34 @@ var _loading_bar: ProgressBar = null
 var _preload_label: Label = null
 
 func _ready() -> void:
-	# Show preloading status if resources are still loading
-	_setup_preload_indicator()
-
 	# If game scene is already loaded, we're ready immediately
-	if ResourcePreloader.is_game_scene_ready:
+	if Preloader.is_game_scene_ready:
 		start_prompt.text = "Press SPACE to start"
 	else:
-		# Connect to preloader progress
-		ResourcePreloader.loading_progress.connect(_on_loading_progress)
-		ResourcePreloader.resource_loaded.connect(_on_resource_loaded)
+		Preloader.resource_loaded.connect(_on_resource_loaded)
+
+	# Show preloading status if resources are still loading
+	if not Preloader.is_fully_loaded:
+		_setup_preload_indicator()
+		Preloader.loading_progress.connect(_on_loading_progress)
+		Preloader.all_resources_loaded.connect(_on_all_resources_loaded)
 
 func _setup_preload_indicator() -> void:
-	# Create a subtle preload progress indicator at the bottom
-	if not ResourcePreloader.is_fully_loaded:
-		_preload_label = Label.new()
-		_preload_label.text = "Loading resources..."
-		_preload_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_preload_label.add_theme_font_size_override("font_size", 24)
-		_preload_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.7))
+	_preload_label = Label.new()
+	_preload_label.text = "Loading resources..."
+	_preload_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_preload_label.add_theme_font_size_override("font_size", 24)
+	_preload_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.7))
 
-		_loading_bar = ProgressBar.new()
-		_loading_bar.custom_minimum_size = Vector2(400, 8)
-		_loading_bar.max_value = 1.0
-		_loading_bar.value = ResourcePreloader.get_loading_progress()
-		_loading_bar.show_percentage = false
-		_loading_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_loading_bar = ProgressBar.new()
+	_loading_bar.custom_minimum_size = Vector2(400, 8)
+	_loading_bar.max_value = 1.0
+	_loading_bar.value = Preloader.get_loading_progress()
+	_loading_bar.show_percentage = false
+	_loading_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
-		# Add to bottom of vbox
-		vbox.add_child(_preload_label)
-		vbox.add_child(_loading_bar)
+	vbox.add_child(_preload_label)
+	vbox.add_child(_loading_bar)
 
 func _on_loading_progress(progress: float) -> void:
 	if _loading_bar:
@@ -62,14 +60,13 @@ func _on_resource_loaded(path: String) -> void:
 	if path == GAME_SCENE_PATH and _load_state == LoadState.IDLE:
 		start_prompt.text = "Press SPACE to start"
 
-	# Hide preload indicator when done
-	if ResourcePreloader.is_fully_loaded:
-		if _preload_label:
-			_preload_label.queue_free()
-			_preload_label = null
-		if _loading_bar:
-			_loading_bar.queue_free()
-			_loading_bar = null
+func _on_all_resources_loaded() -> void:
+	if _preload_label:
+		_preload_label.queue_free()
+		_preload_label = null
+	if _loading_bar:
+		_loading_bar.queue_free()
+		_loading_bar = null
 
 func _process(delta: float) -> void:
 	match _load_state:
@@ -108,11 +105,11 @@ func _start_game_loading() -> void:
 
 func _check_scene_ready() -> void:
 	# Check if the scene is already preloaded
-	if ResourcePreloader.is_game_scene_ready:
+	if Preloader.is_game_scene_ready:
 		_transition_to_game()
 	else:
 		# Need to wait for loading - request priority and start threaded load
-		ResourcePreloader.request_priority_load(GAME_SCENE_PATH)
+		Preloader.request_priority_load(GAME_SCENE_PATH)
 
 		# Start our own threaded load as backup
 		var status := ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH)
@@ -123,7 +120,7 @@ func _check_scene_ready() -> void:
 
 func _check_threaded_load() -> void:
 	# First check if preloader finished
-	if ResourcePreloader.is_game_scene_ready:
+	if Preloader.is_game_scene_ready:
 		_transition_to_game()
 		return
 
@@ -156,8 +153,8 @@ func _transition_to_game() -> void:
 	# Get scene from preloader (preferred) or our own threaded load (fallback)
 	# We may have arrived here via either path in _check_threaded_load
 	var scene: PackedScene
-	if ResourcePreloader.is_game_scene_ready:
-		scene = ResourcePreloader.get_game_scene()
+	if Preloader.is_game_scene_ready:
+		scene = Preloader.get_game_scene()
 	else:
 		scene = ResourceLoader.load_threaded_get(GAME_SCENE_PATH) as PackedScene
 

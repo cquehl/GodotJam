@@ -18,7 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://scripts/game_manager.gd"
-ResourcePreloader="*res://scripts/resource_preloader.gd"
+Preloader="*res://scripts/resource_preloader.gd"
 DropletPool="*res://scripts/droplet_pool.gd"
 AudioManager="*res://scripts/audio_manager.gd"
 

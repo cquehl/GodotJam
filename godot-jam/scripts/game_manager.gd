@@ -110,8 +110,8 @@ func game_over() -> void:
 		DropletPool.clear_active_droplets()
 
 	# Use preloaded scene if available
-	if ResourcePreloader.is_game_over_ready:
-		var scene := ResourcePreloader.get_game_over_scene()
+	if Preloader.is_game_over_ready:
+		var scene := Preloader.get_game_over_scene()
 		get_tree().change_scene_to_packed(scene)
 	else:
 		# Fallback to file-based load
@@ -121,6 +121,7 @@ func game_over() -> void:
 	_transitioning = false
 
 func start_game() -> void:
+	_transitioning = false
 	reset_score()
 	game_time = 0.0
 	game_active = true
@@ -134,8 +135,8 @@ func start_game() -> void:
 		DropletPool.clear_active_droplets()
 
 	# Use preloaded scene if available
-	if ResourcePreloader.is_game_scene_ready:
-		var scene := ResourcePreloader.get_game_scene()
+	if Preloader.is_game_scene_ready:
+		var scene := Preloader.get_game_scene()
 		get_tree().change_scene_to_packed(scene)
 	else:
 		get_tree().change_scene_to_file("res://scenes/game_3d.tscn")
