@@ -30,7 +30,7 @@ func _ready() -> void:
 func _apply_water_shader() -> void:
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = water_shader
-	shader_mat.set_shader_parameter("water_color", Color(0.2, 0.5, 1.0, 0.85))
+	shader_mat.set_shader_parameter("opacity", 1.0)
 	mesh.set_surface_override_material(0, shader_mat)
 
 func _process(delta: float) -> void:
@@ -48,29 +48,19 @@ func _process(delta: float) -> void:
 	shadow.scale = Vector3(shadow_scale, 1.0, shadow_scale)
 
 	# Visual feedback for blue droplets during power-up
+	# Oscillate between 15% and 85% opacity when orb is big (yellow/powered up)
 	if not is_collectible and not is_gold:
 		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
 		if mat:
-			var current_color := mat.get_shader_parameter("water_color") as Color
-			var target_alpha := 0.85
+			var opacity_param = mat.get_shader_parameter("opacity")
+			var current_opacity: float = opacity_param if opacity_param != null else 1.0
+			var target_opacity := 1.0
 			if GameManager.is_powered_up:
-				var time_left := GameManager.power_up_timer
-				var time_elapsed := GameManager.POWER_UP_DURATION - time_left
-
-				if time_elapsed < 1.0:
-					# First second: rapid flicker
-					target_alpha = 0.3 if fmod(time_elapsed * 12.0, 1.0) < 0.5 else 0.8
-				elif time_left > 2.0:
-					# Middle: steady 60% opacity
-					target_alpha = 0.4
-				else:
-					# Last 2 seconds: slowly phase back to solid
-					var blink_speed := lerpf(2.0, 6.0, 1.0 - (time_left / 2.0))
-					var blink := sin(time_left * blink_speed * PI) * 0.5 + 0.5
-					target_alpha = lerpf(0.4, 0.85, blink)
-
-			current_color.a = lerpf(current_color.a, target_alpha, delta * 10.0)
-			mat.set_shader_parameter("water_color", current_color)
+				# Smooth sine wave oscillation between 0.15 and 0.85
+				var wave := sin(Time.get_ticks_msec() * 0.005) * 0.5 + 0.5  # 0 to 1
+				target_opacity = lerpf(0.15, 0.85, wave)
+			current_opacity = lerpf(current_opacity, target_opacity, delta * 8.0)
+			mat.set_shader_parameter("opacity", current_opacity)
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed
