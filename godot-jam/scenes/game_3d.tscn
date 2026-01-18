@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cypksu2x31fcw"]
+[gd_scene load_steps=19 format=3 uid="uid://cypksu2x31fcw"]
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
@@ -7,7 +7,6 @@
 [ext_resource type="Shader" uid="uid://d2h72krqti32h" path="res://shaders/starfield_skybox.gdshader" id="5_starfield"]
 [ext_resource type="Shader" uid="uid://bmdycm4nl7sds" path="res://shaders/galaxy_disc.gdshader" id="6_galaxy"]
 [ext_resource type="Texture2D" uid="uid://cb7ofso7aa7an" path="res://textures/Base Sprite_NPC.ase.png" id="7_noise1"]
-[ext_resource type="Texture2D" uid="uid://cav10n1ghwws" path="res://textures/esrui2-150x94.png" id="8_noise2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
 shader = ExtResource("5_starfield")
@@ -38,20 +37,19 @@ subdivide_depth = 32
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
 render_priority = -10
 shader = ExtResource("6_galaxy")
-shader_parameter/dust_strength = 2.5430001207925
+shader_parameter/dust_strength = 0.5390000256025
 shader_parameter/dust_color = Color(0.8792315, 8.3073675e-05, 0.6922006, 1)
-shader_parameter/arm_count = 3.486000165585
-shader_parameter/arm_compression = 0.12
-shader_parameter/core_radius = 0.28
+shader_parameter/arm_count = 3.0000001425
+shader_parameter/arm_compression = 0.50000002375
+shader_parameter/core_radius = 0.7690000365275
 shader_parameter/core_color = Color(0.70420504, 0, 0.8466836, 1)
-shader_parameter/galaxy_radius = 0.55
-shader_parameter/rotation_speed = 0.08
+shader_parameter/galaxy_radius = 1.5200000689401199
+shader_parameter/rotation_speed = 1.0
 shader_parameter/sky_color = Color(0.23, 0.08, 0.14, 1)
-shader_parameter/star_size = 1.2
-shader_parameter/overall_alpha = 0.7
-shader_parameter/edge_fade = 0.55
+shader_parameter/star_size = 0.40800001612012
+shader_parameter/overall_alpha = 0.1410000066975
+shader_parameter/edge_fade = 0.30800001230093
 shader_parameter/noise_texture_1 = ExtResource("7_noise1")
-shader_parameter/noise_texture_2 = ExtResource("8_noise2")
 
 [sub_resource type="SphereMesh" id="SphereMesh_orb"]
 radial_segments = 32
