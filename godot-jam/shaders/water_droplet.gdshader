@@ -2,12 +2,12 @@ shader_type spatial;
 render_mode blend_mix, depth_prepass_alpha, cull_back;
 
 // Metaball-style bright blue droplet
-uniform vec3 deep_color : source_color = vec3(0.1, 0.4, 1.0);
-uniform vec3 mid_color : source_color = vec3(0.3, 0.6, 1.0);
-uniform vec3 rim_color : source_color = vec3(0.5, 0.9, 1.0);
-uniform float rim_power : hint_range(1.0, 8.0) = 2.0;
-uniform float rim_intensity : hint_range(0.0, 3.0) = 1.2;
-uniform float inner_glow : hint_range(0.0, 2.0) = 0.5;
+uniform vec3 deep_color : source_color = vec3(0.0, 0.3, 1.0);
+uniform vec3 mid_color : source_color = vec3(0.1, 0.5, 1.0);
+uniform vec3 rim_color : source_color = vec3(0.3, 0.8, 1.0);
+uniform float rim_power : hint_range(1.0, 8.0) = 1.5;
+uniform float rim_intensity : hint_range(0.0, 3.0) = 1.5;
+uniform float inner_glow : hint_range(0.0, 2.0) = 0.8;
 uniform float tail_length : hint_range(0.0, 3.0) = 3.0;
 uniform float tail_width : hint_range(0.0, 1.0) = 0.14;
 
@@ -53,7 +53,7 @@ void fragment() {
     float alpha = mix(0.95, 0.4, tail_blend);
 
     ALBEDO = final_color;
-    EMISSION = rim * 0.1; // Minimal emission to avoid glow washout
+    EMISSION = final_color * 0.3; // Bright glow
     ALPHA = alpha;
     METALLIC = 0.0;
     ROUGHNESS = 0.4;
