@@ -60,6 +60,7 @@ layout_mode = 2
 
 [node name="PowerupsToggle" type="CheckButton" parent="VBox/PowerupsRow"]
 layout_mode = 2
+scale = Vector2(3, 3)
 button_pressed = true
 
 [node name="Spacer1" type="Control" parent="VBox"]
@@ -70,5 +71,5 @@ layout_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 0.8)
-text = "Press ESC to return"
+text = "Press any key to return"
 horizontal_alignment = 1
