@@ -39,6 +39,10 @@ const COYOTE_TIME: float = 0.1  # Seconds to still jump after leaving ground
 const JUMP_BUFFER_TIME: float = 0.12  # Seconds to buffer jump before landing
 const JUMP_CUT_MULTIPLIER: float = 0.4  # Velocity multiplier when releasing jump early
 const SQUASH_AMOUNT: float = 0.3  # How much to squash/stretch
+const CAMERA_Y_COMPENSATION: float = 1.4  # Compensate for 45° camera angle
+const POWERED_UP_SCALE: float = 3.0  # Scale multiplier when powered up
+const FALL_GRAVITY_MULTIPLIER: float = 1.5  # Fall faster than rise for snappier feel
+const EDGE_BOUNCE_FACTOR: float = 0.5  # Velocity retained when bouncing off edge
 
 func _ready() -> void:
 	# Start gameplay music
@@ -58,7 +62,7 @@ func _ready() -> void:
 	GameManager.immunity_ended.connect(_on_immunity_ended)
 
 func _on_power_up_started() -> void:
-	target_power_up_scale = 3.0
+	target_power_up_scale = POWERED_UP_SCALE
 
 func _on_power_up_ended() -> void:
 	target_power_up_scale = 1.0
@@ -78,7 +82,7 @@ func _handle_movement(delta: float) -> void:
 	input.y = Input.get_axis("move_up", "move_down")
 
 	# Compensate for camera angle (45° = ~1.4x to feel equal)
-	input.y *= 1.4
+	input.y *= CAMERA_Y_COMPENSATION
 
 	if input.length() > 1.0:
 		input = input.normalized()
@@ -103,7 +107,7 @@ func _handle_movement(delta: float) -> void:
 		position_xz = position_xz.normalized() * GameManager.platform_radius
 		# Bounce off edge slightly
 		var normal := position_xz.normalized()
-		velocity_xz = velocity_xz.slide(normal) * 0.5
+		velocity_xz = velocity_xz.slide(normal) * EDGE_BOUNCE_FACTOR
 
 func _handle_jumping(delta: float) -> void:
 	# Update timers
@@ -128,7 +132,7 @@ func _handle_jumping(delta: float) -> void:
 
 	# Execute jump (with coyote time and buffer)
 	var can_jump := coyote_timer > 0 or is_grounded
-	if jump_buffer_timer > 0 and can_jump and is_grounded:
+	if jump_buffer_timer > 0 and can_jump:
 		vertical_velocity = GameManager.jump_velocity
 		is_grounded = false
 		coyote_timer = 0
@@ -143,7 +147,7 @@ func _handle_jumping(delta: float) -> void:
 		# Faster fall for snappier feel
 		var gravity_multiplier := 1.0
 		if vertical_velocity < 0:
-			gravity_multiplier = 1.5  # Fall faster than rise
+			gravity_multiplier = FALL_GRAVITY_MULTIPLIER
 
 		vertical_velocity -= GameManager.gravity * gravity_multiplier * delta
 		jump_offset += vertical_velocity * delta

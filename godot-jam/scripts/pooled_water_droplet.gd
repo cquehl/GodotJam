@@ -5,12 +5,18 @@ extends Area3D
 # A reusable water droplet that can be reset and recycled
 # =============================================================================
 
+# Size scale constants
+const LARGE_SCALE: float = 2.5
+const HUGE_SCALE: float = 5.0
+const GOLD_SCALE: float = 4.0
+const GOLD_SPEED_MULTIPLIER: float = 0.5  # Gold orbs move slower
+
 var velocity: Vector3 = Vector3.ZERO
 var speed: float = 6.0
 var is_collectible: bool = false
 var is_gold: bool = false
 var base_height: float = 0.3
-var gold_height: float = 0.3
+var gold_height: float = 0.3  # Same as base height for easy collection
 
 var _lifetime_timer: float = 0.0
 var _max_lifetime: float = 6.0
@@ -170,10 +176,9 @@ func make_collectible() -> void:
 	mesh.set_surface_override_material(0, _electric_material)
 
 func make_large() -> void:
-	var large_scale := 2.5
-	mesh.scale = _original_mesh_scale * large_scale
-	shadow.scale = Vector3(large_scale, 1.0, large_scale)
-	_scale_collision(large_scale)
+	mesh.scale = _original_mesh_scale * LARGE_SCALE
+	shadow.scale = Vector3(LARGE_SCALE, 1.0, LARGE_SCALE)
+	_scale_collision(LARGE_SCALE)
 
 	if is_collectible:
 		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
@@ -181,10 +186,9 @@ func make_large() -> void:
 			mat.set_shader_parameter("glow_intensity", 3.5)
 
 func make_huge() -> void:
-	var large_scale := 5.0
-	mesh.scale = _original_mesh_scale * large_scale
-	shadow.scale = Vector3(large_scale, 1.0, large_scale)
-	_scale_collision(large_scale)
+	mesh.scale = _original_mesh_scale * HUGE_SCALE
+	shadow.scale = Vector3(HUGE_SCALE, 1.0, HUGE_SCALE)
+	_scale_collision(HUGE_SCALE)
 
 	if is_collectible:
 		var mat := mesh.get_surface_override_material(0) as ShaderMaterial
@@ -195,12 +199,11 @@ func make_gold() -> void:
 	is_gold = true
 	is_collectible = true
 	trail_particles.emitting = false
-	speed *= 0.5
+	speed *= GOLD_SPEED_MULTIPLIER
 
-	var large_scale := 4.0
-	mesh.scale = _original_mesh_scale * large_scale
-	shadow.scale = Vector3(large_scale * 1.5, 1.0, large_scale * 1.5)
-	_scale_collision(large_scale)
+	mesh.scale = _original_mesh_scale * GOLD_SCALE
+	shadow.scale = Vector3(GOLD_SCALE * 1.5, 1.0, GOLD_SCALE * 1.5)
+	_scale_collision(GOLD_SCALE)
 
 	mesh.set_surface_override_material(0, _gold_material)
 

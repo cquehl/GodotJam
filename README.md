@@ -33,13 +33,6 @@ A dodge-and-collect arcade game built with Godot 4.5. Control a flaming orb on a
 
 **Areas for improvement:**
 - Consider consolidating `Preloader` and `DropletPool` autoloads
-- State duplication between `title_screen.gd` and `game_manager.gd` - title screen should call `GameManager.start_game()`
-
-### Known Issues (Moderate)
-
-1. **Inconsistent `gold_height` values** - `water_droplet.gd` uses 1.2, `pooled_water_droplet.gd` uses 0.3
-2. **Magic numbers** throughout code (camera angle compensation 1.4, spawn distance +4.0, etc.)
-3. **Unused `can_jump` variable** in `orb_controller_3d.gd:127`
 
 ### Performance Notes
 
