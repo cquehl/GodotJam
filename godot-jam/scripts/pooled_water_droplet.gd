@@ -89,6 +89,7 @@ func reset_droplet() -> void:
 
 	# Reset transforms
 	mesh.scale = _original_mesh_scale
+	mesh.rotation = Vector3.ZERO
 	shadow.scale = _original_shadow_scale
 	position = Vector3(0, -100, 0)  # Position far below play area
 

@@ -38,16 +38,16 @@ func _ready() -> void:
 		color = Color.YELLOW
 	elif score <= 14:
 		message = "Wow, that's impressive!"
-		color = Color.BLUE
+		color = Color(0.2, 0.6, 1.0)  # Neon blue
 	elif score <= 20:
 		message = "Seriously!!! You are impressive!"
-		color = Color.INDIGO
+		color = Color(0.7, 0.3, 1.0)  # Neon purple
 	elif score <= 29:
 		message = "You're on fire! Literally!"
 		color = Color.LAWN_GREEN
 	else:
 		message = "You win! I didn't think this was possible. GGz"
-		color = Color.VIOLET
+		color = Color(1.0, 0.2, 0.8)  # Neon magenta
 
 	message_label.text = message
 	message_label.add_theme_color_override("font_color", color)

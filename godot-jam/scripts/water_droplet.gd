@@ -64,10 +64,9 @@ func _process(delta: float) -> void:
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed
-	# Rotate mesh so tail (-Z) trails behind (opposite to movement)
+	# Rotate mesh so tail trails behind (opposite to movement)
 	if velocity.length() > 0.01:
 		var forward := velocity.normalized()
-		# Look away from movement so -Z (tail) points backward
 		mesh.look_at(mesh.global_position - forward, Vector3.UP)
 
 func make_collectible() -> void:

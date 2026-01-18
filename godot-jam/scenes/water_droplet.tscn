@@ -1,47 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://bbnqgdr03pv8f"]
+[gd_scene load_steps=15 format=3 uid="uid://bbnqgdr03pv8f"]
 
 [ext_resource type="Script" uid="uid://ll462rhkixch" path="res://scripts/water_droplet.gd" id="1_script"]
 [ext_resource type="Shader" uid="uid://dxehmxtwlhspn" path="res://shaders/water_droplet.gdshader" id="2_shader"]
-
-[sub_resource type="Curve" id="Curve_trail"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.3, 0.7), 0.0, 0.0, 0, 0, Vector2(0.6, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
-point_count = 4
-
-[sub_resource type="CurveTexture" id="CurveTexture_scale"]
-curve = SubResource("Curve_trail")
-
-[sub_resource type="Gradient" id="Gradient_trail"]
-colors = PackedColorArray(0.3, 0.7, 1, 0.8, 0.5, 0.9, 1, 0)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture_trail"]
-gradient = SubResource("Gradient_trail")
-
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_trail"]
-direction = Vector3(0, 0, 1)
-spread = 15.0
-initial_velocity_min = 1.0
-initial_velocity_max = 2.0
-gravity = Vector3(0, 0, 0)
-scale_min = 0.5
-scale_max = 1.0
-scale_curve = SubResource("CurveTexture_scale")
-color_ramp = SubResource("GradientTexture_trail")
-
-[sub_resource type="StandardMaterial3D" id="Material_trail_particle"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0.4, 0.8, 1, 1)
-emission_enabled = true
-emission = Color(0.3, 0.6, 1, 1)
-emission_energy_multiplier = 1.5
-billboard_mode = 3
-
-[sub_resource type="SphereMesh" id="SphereMesh_trail_particle"]
-radius = 0.015
-height = 0.03
-radial_segments = 6
-rings = 3
-material = SubResource("Material_trail_particle")
 
 [sub_resource type="SphereMesh" id="SphereMesh_drop"]
 radius = 0.15
@@ -52,14 +12,54 @@ rings = 8
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_water"]
 render_priority = 0
 shader = ExtResource("2_shader")
-shader_parameter/deep_color = Color(0.1, 0.4, 1.0, 1)
-shader_parameter/mid_color = Color(0.3, 0.6, 1.0, 1)
-shader_parameter/rim_color = Color(0.5, 0.9, 1.0, 1)
+shader_parameter/deep_color = Color(0.1, 0.4, 1, 1)
+shader_parameter/mid_color = Color(0.3, 0.6, 1, 1)
+shader_parameter/rim_color = Color(0.5, 0.9, 1, 1)
 shader_parameter/rim_power = 2.0
 shader_parameter/rim_intensity = 1.2
 shader_parameter/inner_glow = 0.5
 shader_parameter/tail_length = 3.0
 shader_parameter/tail_width = 0.14000000665
+shader_parameter/opacity = 1.0
+
+[sub_resource type="Gradient" id="Gradient_trail"]
+colors = PackedColorArray(0.3, 0.7, 1, 0.8, 0.5, 0.9, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_trail"]
+gradient = SubResource("Gradient_trail")
+
+[sub_resource type="Curve" id="Curve_trail"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.3, 0.7), 0.0, 0.0, 0, 0, Vector2(0.6, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_scale"]
+curve = SubResource("Curve_trail")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_trail"]
+direction = Vector3(0, 0, -1)
+spread = 15.0
+initial_velocity_min = 1.0
+initial_velocity_max = 2.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.5
+scale_curve = SubResource("CurveTexture_scale")
+color_ramp = SubResource("GradientTexture_trail")
+
+[sub_resource type="StandardMaterial3D" id="Material_trail_particle"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.4, 0.8, 1, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="SphereMesh" id="SphereMesh_trail_particle"]
+material = SubResource("Material_trail_particle")
+radius = 0.015
+height = 0.03
+radial_segments = 6
+rings = 3
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_shadow"]
 top_radius = 0.18
@@ -84,6 +84,13 @@ cast_shadow = 2
 mesh = SubResource("SphereMesh_drop")
 surface_material_override/0 = SubResource("ShaderMaterial_water")
 
+[node name="TrailParticles" type="GPUParticles3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.53014743)
+amount = 20
+lifetime = 0.4
+process_material = SubResource("ParticleProcessMaterial_trail")
+draw_pass_1 = SubResource("SphereMesh_trail_particle")
+
 [node name="Shadow" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
 cast_shadow = 0
@@ -92,10 +99,3 @@ surface_material_override/0 = SubResource("Material_shadow")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape_collision")
-
-[node name="TrailParticles" type="GPUParticles3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4)
-amount = 20
-lifetime = 0.4
-process_material = SubResource("ParticleProcessMaterial_trail")
-draw_pass_1 = SubResource("SphereMesh_trail_particle")
