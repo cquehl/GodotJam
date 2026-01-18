@@ -8,18 +8,16 @@ extends Node
 # Music tracks - lofi beats to game to
 const MUSIC_TRACKS := [
 	"res://audio/music/lofi_chill_1.ogg",
-	"res://audio/music/lofi_chill_2.ogg",
-	"res://audio/music/lofi_chill_3.ogg",
 ]
 
 # Sound effects
 const SFX := {
-	"collect": "res://audio/sfx/collect.ogg",
-	"hit": "res://audio/sfx/hit.ogg",
-	"powerup": "res://audio/sfx/powerup.ogg",
-	"powerup_end": "res://audio/sfx/powerup_end.ogg",
-	"jump": "res://audio/sfx/jump.ogg",
-	"game_over": "res://audio/sfx/game_over.ogg",
+	"collect": "res://audio/sfx/collect.wav",
+	"hit": "res://audio/sfx/hit.wav",
+	"powerup": "res://audio/sfx/powerup.wav",
+	"powerup_end": "res://audio/sfx/powerup_end.wav",
+	"jump": "res://audio/sfx/jump.wav",
+	"game_over": "res://audio/sfx/game_over.wav",
 }
 
 # Audio buses
