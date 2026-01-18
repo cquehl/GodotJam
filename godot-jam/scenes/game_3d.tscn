@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://cypksu2x31fcw"]
+[gd_scene load_steps=20 format=3 uid="uid://cypksu2x31fcw"]
 
 [ext_resource type="Script" uid="uid://cj2n810in24kt" path="res://scripts/orb_controller_3d.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://fire/fire.tscn" id="2_fire"]
@@ -51,6 +51,22 @@ shader_parameter/overall_alpha = 0.1410000066975
 shader_parameter/edge_fade = 0.30800001230093
 shader_parameter/noise_texture_1 = ExtResource("7_noise1")
 
+[sub_resource type="StandardMaterial3D" id="Material_platform_rim"]
+render_priority = -10
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(0.6, 0.3, 0.9, 0.35)
+emission_enabled = true
+emission = Color(0.6, 0.3, 0.9, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="TorusMesh" id="TorusMesh_platform_rim"]
+inner_radius = 6.8
+outer_radius = 7.0
+rings = 64
+ring_segments = 16
+
 [sub_resource type="SphereMesh" id="SphereMesh_orb"]
 radius = 0.5
 height = 1.0
@@ -99,6 +115,11 @@ environment = SubResource("Environment_7jurc")
 [node name="Platform" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_platform")
 surface_material_override/0 = SubResource("ShaderMaterial_galaxy")
+
+[node name="PlatformRim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("TorusMesh_platform_rim")
+surface_material_override/0 = SubResource("Material_platform_rim")
 
 [node name="Orb" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
