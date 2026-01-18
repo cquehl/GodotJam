@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://settings_scene"]
+[gd_scene load_steps=2 format=3 uid="uid://c4xk8m2rnvf5q"]
 
-[ext_resource type="Script" uid="uid://settings_script" path="res://scripts/settings.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dr7loi6avh4f1" path="res://scripts/settings.gd" id="1_script"]
 
 [node name="Settings" type="Control"]
 layout_mode = 3
@@ -45,12 +45,22 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 
-[node name="ComingSoon" type="Label" parent="VBox"]
+[node name="PowerupsRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="PowerupsLabel" type="Label" parent="VBox/PowerupsRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
-theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 0.8)
-text = "Coming soon..."
-horizontal_alignment = 1
+text = "Gold Powerups"
+
+[node name="Spacer" type="Control" parent="VBox/PowerupsRow"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+
+[node name="PowerupsToggle" type="CheckButton" parent="VBox/PowerupsRow"]
+layout_mode = 2
+button_pressed = true
 
 [node name="Spacer1" type="Control" parent="VBox"]
 custom_minimum_size = Vector2(0, 40)
@@ -60,5 +70,5 @@ layout_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 0.8)
-text = "Press any key to return"
+text = "Press ESC to return"
 horizontal_alignment = 1
