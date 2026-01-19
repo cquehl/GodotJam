@@ -17,10 +17,11 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameManager="*res://scripts/game_manager.gd"
-Preloader="*res://scripts/resource_preloader.gd"
-DropletPool="*res://scripts/droplet_pool.gd"
+DebugLoader="*res://scripts/debug_loader.gd"
 AudioManager="*res://scripts/audio_manager.gd"
+DropletPool="*res://scripts/droplet_pool.gd"
+Preloader="*res://scripts/resource_preloader.gd"
+GameManager="*res://scripts/game_manager.gd"
 
 [display]
 
