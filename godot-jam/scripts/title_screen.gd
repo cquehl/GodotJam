@@ -10,14 +10,14 @@ const GAME_SCENE_PATH := "res://scenes/game_3d.tscn"
 # Loading states
 enum LoadState { IDLE, STARTING, LOADING, TRANSITIONING }
 var _load_state: LoadState = LoadState.IDLE
-var _loading_dots: int = 3
+var _loading_dots: int = 0
 var _dot_timer: float = 0.0
 const DOT_INTERVAL := 0.3
 
 # Hint flash animation
 var _flash_timer: float = 0.0
 const FLASH_SPEED := 3.0  # Speed of the flash pulse
-const MIN_TRANSITION_TIME := 0.5  # Minimum time to show loading screen
+const MIN_TRANSITION_TIME := 0.0  # No minimum - transition as soon as loading completes
 
 # Hints for loading screen
 const HINTS := [
@@ -124,23 +124,32 @@ func _create_loading_screen() -> void:
 	container.add_theme_constant_override("separation", 40)
 	_loading_screen.add_child(container)
 
-	# Loading title
+	# Loading title (left-aligned text in a centered fixed-width label)
 	_loading_title = Label.new()
-	_loading_title.text = "Loading Game..."
-	_loading_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_loading_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_loading_title.text = "Loading Game"
+	_loading_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_loading_title.add_theme_font_size_override("font_size", 48)
-	container.add_child(_loading_title)
+	_loading_title.custom_minimum_size.x = 500
 
-	# Hint label
+	# Wrap in a CenterContainer to center the fixed-width label
+	var title_center := CenterContainer.new()
+	title_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_center.add_child(_loading_title)
+	container.add_child(title_center)
+
+	# Hint label (same fixed width as title, wrapped in CenterContainer for alignment)
 	_hint_label = Label.new()
 	_hint_label.text = "TIP: " + HINTS[_current_hint_index]
-	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_hint_label.custom_minimum_size.x = 500
 	_hint_label.add_theme_font_size_override("font_size", 24)
 	_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 0.9))
 	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	container.add_child(_hint_label)
+
+	var hint_center := CenterContainer.new()
+	hint_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint_center.add_child(_hint_label)
+	container.add_child(hint_center)
 
 func _update_loading_screen(delta: float) -> void:
 	_hint_timer += delta
