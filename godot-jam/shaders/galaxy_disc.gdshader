@@ -32,14 +32,15 @@ float turbulent_noise(vec2 uv) {
     mat2 rotation_matrix = mat2(vec2(cos(angle), -sin(angle)), vec2(sin(angle), cos(angle)));
 
     float scale = 1.0;
-    for (int i = 0; i < 7; i++) {
+    // Reduced from 7 to 4 iterations for WebGL performance
+    for (int i = 0; i < 4; i++) {
         uv = rotation_matrix * uv;
         float noise_val = get_noise_value(uv * scale);
         value += (1.0 / scale) * pow(noise_val, dust_strength);
         scale *= 2.0;
     }
 
-    return value / 2.0;
+    return value / 1.5;
 }
 
 void fragment() {

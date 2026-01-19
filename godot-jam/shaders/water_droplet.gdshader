@@ -11,7 +11,7 @@ uniform float rim_power : hint_range(1.0, 8.0) = 1.5;
 uniform float rim_intensity : hint_range(0.0, 3.0) = 1.5;
 uniform float inner_glow : hint_range(0.0, 2.0) = 0.8;
 uniform float glow_intensity : hint_range(0.0, 5.0) = 2.0;
-uniform float tail_length : hint_range(0.0, 3.0) = 3.0;
+uniform float tail_length : hint_range(0.0, 3.0) = 1.5;
 uniform float tail_width : hint_range(0.0, 1.0) = 0.14;
 uniform float opacity : hint_range(0.0, 1.0) = 1.0;
 
