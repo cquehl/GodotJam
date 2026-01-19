@@ -9,6 +9,7 @@ extends Node
 signal all_resources_loaded
 signal resource_loaded(resource_path: String)
 signal loading_progress(progress: float)
+signal everything_ready  # Emitted when ALL subsystems are loaded (scenes, shaders, audio, pool)
 
 # Resources to preload
 const GAME_SCENE_PATH := "res://scenes/game_3d.tscn"
@@ -50,10 +51,14 @@ var _compiled_shaders: Array[Shader] = []
 var is_game_scene_ready: bool = false
 var is_game_over_ready: bool = false
 var is_fully_loaded: bool = false
+var is_shaders_compiled: bool = false
+var is_pool_ready: bool = false
+var is_audio_ready: bool = false
+var is_everything_ready: bool = false
 
 func _ready() -> void:
-	# Delay preloading to let first frames render smoothly
-	get_tree().create_timer(0.2).timeout.connect(_start_background_loading)
+	# Start loading immediately - title screen will wait for completion
+	call_deferred("_start_background_loading")
 
 var _shader_index: int = 0
 
@@ -65,15 +70,23 @@ func _start_background_loading() -> void:
 	_total_to_load = _loading_queue.size()
 	_loaded_count = 0
 
-	# Start loading scenes - shaders will compile gradually after
-	_load_next_resource()
+	# Check if AudioManager already finished loading (in case of race condition)
+	if AudioManager.is_audio_loaded:
+		is_audio_ready = true
+	else:
+		# Connect to AudioManager signal
+		if not AudioManager.audio_loaded.is_connected(_on_audio_loaded):
+			AudioManager.audio_loaded.connect(_on_audio_loaded, CONNECT_ONE_SHOT)
 
-	# Start shader compilation after a short delay (let first frame render)
-	get_tree().create_timer(0.1).timeout.connect(_compile_next_shader)
+	# Start loading scenes and shaders in parallel
+	_load_next_resource()
+	_compile_next_shader()
 
 func _compile_next_shader() -> void:
 	# Compile one shader per frame to avoid stutters
 	if _shader_index >= SHADER_PATHS.size():
+		is_shaders_compiled = true
+		_on_shaders_compiled()
 		return
 
 	var shader_path: String = SHADER_PATHS[_shader_index]
@@ -86,12 +99,40 @@ func _compile_next_shader() -> void:
 	# Schedule next shader compilation
 	if _shader_index < SHADER_PATHS.size():
 		call_deferred("_compile_next_shader")
+	else:
+		is_shaders_compiled = true
+		_on_shaders_compiled()
+
+func _on_shaders_compiled() -> void:
+	# Initialize DropletPool now that shaders are ready
+	if not is_pool_ready:
+		DropletPool.ensure_initialized()
+		is_pool_ready = true
+		DropletPool.pool_ready.connect(_on_pool_ready, CONNECT_ONE_SHOT)
+		# If pool initialization is synchronous, it's already ready
+		if DropletPool.is_ready():
+			_on_pool_ready()
+
+func _on_pool_ready() -> void:
+	is_pool_ready = true
+	_check_everything_ready()
+
+func _on_audio_loaded() -> void:
+	is_audio_ready = true
+	_check_everything_ready()
+
+func _check_everything_ready() -> void:
+	if is_fully_loaded and is_shaders_compiled and is_pool_ready and is_audio_ready:
+		if not is_everything_ready:
+			is_everything_ready = true
+			everything_ready.emit()
 
 func _load_next_resource() -> void:
 	if _loading_queue.is_empty():
 		_is_loading = false
 		is_fully_loaded = true
 		all_resources_loaded.emit()
+		_check_everything_ready()
 		return
 
 	_current_loading = _loading_queue.pop_front()
