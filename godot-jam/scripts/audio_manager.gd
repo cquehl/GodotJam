@@ -8,9 +8,9 @@ extends Node
 signal audio_loaded  # Emitted when all audio resources are loaded
 
 # Music tracks
-const MENU_MUSIC := "res://audio/music/_menue_music.mp3"
+const MENU_MUSIC := "res://audio/music/_menue_music.ogg"
 const GAMEPLAY_TRACKS := [
-	"res://audio/music/_game_music.mp3",
+	"res://audio/music/_game_music.ogg",
 ]
 
 # Sound effects (.wav for low-latency playback)
