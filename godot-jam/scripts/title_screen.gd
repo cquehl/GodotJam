@@ -10,7 +10,7 @@ const GAME_SCENE_PATH := "res://scenes/game_3d.tscn"
 # Loading states
 enum LoadState { IDLE, STARTING, LOADING, TRANSITIONING }
 var _load_state: LoadState = LoadState.IDLE
-var _loading_dots: int = 0
+var _loading_dots: int = 3
 var _dot_timer: float = 0.0
 const DOT_INTERVAL := 0.3
 
@@ -21,18 +21,17 @@ const MIN_TRANSITION_TIME := 0.5  # Minimum time to show loading screen
 
 # Hints for loading screen
 const HINTS := [
-	"Use WASD or Arrow Keys to move",
-	"Press SPACE to jump over droplets",
-	"Collect power-ups for temporary invincibility",
-	"Stay in the center to react to droplets from any direction",
-	"Jump timing is key - don't jump too early!",
-	"Watch for targeted droplets that aim at you",
-	"The longer you survive, the harder it gets",
-	"Blue droplets are worth more points",
+	"The initial loading takes the longest.",
+	"Jumping with Space Bar helps get out of tight spots.",
+	"When you get a Green Orb, Blue Orbs are fired at your location.",
+	"Be cautious to trigger too many barrages at once.",
+	"Use WASD or Arrow Keys to move.",
+	"Collect power-ups for temporary invincibility.",
+	"The longer you survive, the harder it gets.",
 ]
 var _hint_timer: float = 0.0
 var _current_hint_index: int = 0
-const HINT_DURATION := 2.5
+const HINT_DURATION := 3.67
 
 # UI references
 @onready var start_prompt: Label = $VBox/StartPrompt
@@ -103,7 +102,7 @@ func _start_game_loading() -> void:
 	_load_state = LoadState.STARTING
 	_hint_timer = 0.0
 	_flash_timer = 0.0
-	_current_hint_index = randi() % HINTS.size()
+	_current_hint_index = 0  # Always start with first hint
 
 	# Hide title screen elements
 	vbox.visible = false
