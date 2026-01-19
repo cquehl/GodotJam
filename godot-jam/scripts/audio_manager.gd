@@ -63,6 +63,10 @@ var _playing_menu_music: bool = false
 # Loading state
 var is_audio_loaded: bool = false
 
+# Pending music load (non-blocking fallback)
+var _pending_music_path: String = ""
+var _pending_music_is_menu: bool = false
+
 func _ready() -> void:
 	_setup_audio_buses()
 	_setup_music_players()
@@ -162,6 +166,48 @@ func _process(delta: float) -> void:
 	if _is_crossfading:
 		_process_crossfade(delta)
 
+	# Check for pending music that was deferred due to loading
+	if not _pending_music_path.is_empty():
+		_check_pending_music()
+
+func _check_pending_music() -> void:
+	var status := ResourceLoader.load_threaded_get_status(_pending_music_path)
+	if status == ResourceLoader.THREAD_LOAD_LOADED:
+		# Music is ready - play it now
+		var stream := ResourceLoader.load_threaded_get(_pending_music_path) as AudioStream
+		_cached_music[_pending_music_path] = stream
+		var was_menu := _pending_music_is_menu
+		_pending_music_path = ""
+		_start_music_stream(stream, was_menu)
+	elif status != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		# Loading failed - clear pending and try sync load as last resort
+		var path := _pending_music_path
+		var was_menu := _pending_music_is_menu
+		_pending_music_path = ""
+		if ResourceLoader.exists(path):
+			var stream := load(path) as AudioStream
+			if stream:
+				_cached_music[path] = stream
+				_start_music_stream(stream, was_menu)
+
+func _start_music_stream(stream: AudioStream, is_menu: bool) -> void:
+	if stream == null:
+		return
+
+	if _active_player.playing:
+		# Crossfade to new track
+		var new_player := _music_player_a if _active_player == _music_player_b else _music_player_b
+		new_player.stream = stream
+		new_player.volume_db = linear_to_db(0.0)
+		new_player.play()
+		_active_player = new_player
+		_is_crossfading = true
+		_crossfade_progress = 0.0
+	else:
+		_active_player.stream = stream
+		_active_player.volume_db = linear_to_db(music_volume)
+		_active_player.play()
+
 func _process_crossfade(delta: float) -> void:
 	_crossfade_progress += delta / _crossfade_duration
 
@@ -191,6 +237,7 @@ func _update_music_volume() -> void:
 # =============================================================================
 
 ## Get music from cache, or load it (checking threaded loader first)
+## Returns null if still loading - caller should handle deferred playback
 func _get_or_load_music(path: String) -> AudioStream:
 	# Already cached
 	if _cached_music.has(path):
@@ -206,17 +253,11 @@ func _get_or_load_music(path: String) -> AudioStream:
 			return stream
 
 		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-			# Wait for threaded load to complete (blocking but avoids conflict)
-			while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-				OS.delay_msec(10)
-			# Now get the loaded resource
-			var loaded_status := ResourceLoader.load_threaded_get_status(path)
-			if loaded_status == ResourceLoader.THREAD_LOAD_LOADED:
-				var stream := ResourceLoader.load_threaded_get(path) as AudioStream
-				_cached_music[path] = stream
-				return stream
+			# Return null - don't block the main thread
+			# Caller will set _pending_music_path and _process will handle it
+			return null
 
-	# Not loading or failed - load synchronously
+	# Not loading or failed - load synchronously (fallback)
 	if ResourceLoader.exists(path):
 		var stream := load(path) as AudioStream
 		_cached_music[path] = stream
@@ -234,9 +275,14 @@ func play_track(index: int) -> void:
 	var track_path: String = GAMEPLAY_TRACKS[index]
 	var stream := _get_or_load_music(track_path)
 	if stream == null:
+		# Music still loading - defer playback (non-blocking)
+		_pending_music_path = track_path
+		_pending_music_is_menu = false
+		_current_track_index = index
 		return
 
 	_current_track_index = index
+	_pending_music_path = ""  # Clear any pending request
 
 	if _active_player.playing:
 		# Crossfade to new track
@@ -284,7 +330,12 @@ func play_menu_music() -> void:
 	# Get or load menu music (handles threaded loading)
 	var stream := _get_or_load_music(MENU_MUSIC)
 	if stream == null:
+		# Music still loading - defer playback (non-blocking)
+		_pending_music_path = MENU_MUSIC
+		_pending_music_is_menu = true
 		return
+
+	_pending_music_path = ""  # Clear any pending request
 
 	if _active_player.playing:
 		# Crossfade to menu music

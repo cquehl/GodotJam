@@ -70,6 +70,11 @@ func _start_background_loading() -> void:
 	_total_to_load = _loading_queue.size()
 	_loaded_count = 0
 
+	# Preload gameplay music tracks to avoid blocking when game starts
+	for track_path in AudioManager.GAMEPLAY_TRACKS:
+		if ResourceLoader.exists(track_path):
+			ResourceLoader.load_threaded_request(track_path)
+
 	# Check if AudioManager already finished loading (in case of race condition)
 	if AudioManager.is_audio_loaded:
 		is_audio_ready = true
