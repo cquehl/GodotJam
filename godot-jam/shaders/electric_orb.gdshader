@@ -1,5 +1,7 @@
 shader_type spatial;
-render_mode blend_mix, depth_prepass_alpha, cull_back;
+// SIMPLIFIED VERSION - removed depth_prepass_alpha for WebGL compatibility
+// Original render mode: blend_mix, depth_prepass_alpha, cull_back;
+render_mode blend_mix, cull_back;
 
 uniform vec4 electric_color : source_color = vec4(0.2, 1.0, 0.3, 0.8);
 uniform vec4 core_color : source_color = vec4(0.8, 1.0, 0.9, 1.0);

@@ -8,7 +8,7 @@ extends Node
 
 var _start_time: int = 0
 var _event_times: Dictionary = {}
-var _enabled: bool = true
+var _enabled: bool = false
 var _current_scene_name: String = ""
 
 # Task tracking

@@ -168,11 +168,11 @@ func return_droplet(droplet: Node) -> void:
 	droplet.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
 	droplet.visible = false
  
-	# Reparent to pool storage if needed
+	# Reparent to pool storage if needed (use deferred to avoid physics callback errors)
 	var parent = droplet.get_parent()
 	if parent and parent != _pool_parent:
-		parent.remove_child(droplet)
-		_pool_parent.add_child(droplet)
+		parent.call_deferred("remove_child", droplet)
+		_pool_parent.call_deferred("add_child", droplet)
 
 	if droplet not in _available_pool:
 		_available_pool.append(droplet)
