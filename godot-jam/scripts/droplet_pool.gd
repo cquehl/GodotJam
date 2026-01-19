@@ -7,7 +7,7 @@ extends Node
 
 signal pool_ready
 
-const INITIAL_POOL_SIZE := 30
+const INITIAL_POOL_SIZE := 10
 const MAX_POOL_SIZE := 50
 const WATER_DROPLET_PATH := "res://scenes/water_droplet.tscn"
 
@@ -22,6 +22,9 @@ var _init_count: int = 0
 # Preloaded shaders for quick material setup
 var water_shader: Shader = null
 var electric_shader: Shader = null
+
+# Debug settings
+const DEBUG_POOL := true
 
 func _ready() -> void:
 	# DON'T initialize pool at startup - it's too heavy (30 GPU particle objects)
@@ -38,6 +41,9 @@ func ensure_initialized() -> void:
 func _start_gradual_init() -> void:
 	_is_initializing = true
 	_init_count = 0
+
+	if DEBUG_POOL:
+		print("[DropletPool] Starting gradual initialization (target: %d droplets)" % INITIAL_POOL_SIZE)
 
 	# Use late binding for Preloader to avoid circular autoload dependency
 	var preloader := get_node_or_null("/root/Preloader")
@@ -67,11 +73,16 @@ func _create_next_pooled_droplet() -> void:
 		# Done initializing
 		_is_initialized = true
 		_is_initializing = false
+		if DEBUG_POOL:
+			print("[DropletPool] Pool ready! (%d droplets)" % _available_pool.size())
 		pool_ready.emit()
 		return
 
 	_create_pooled_droplet()
 	_init_count += 1
+
+	if DEBUG_POOL:
+		print("[DropletPool] Created droplet %d/%d" % [_init_count, INITIAL_POOL_SIZE])
 
 	# Schedule next droplet creation
 	if _init_count < INITIAL_POOL_SIZE:
@@ -79,6 +90,8 @@ func _create_next_pooled_droplet() -> void:
 	else:
 		_is_initialized = true
 		_is_initializing = false
+		if DEBUG_POOL:
+			print("[DropletPool] Pool ready! (%d droplets)" % _available_pool.size())
 		pool_ready.emit()
 
 func _create_pooled_droplet() -> Node:
@@ -101,6 +114,8 @@ func get_droplet() -> Node:
 			_droplet_scene = load(WATER_DROPLET_PATH)
 		var temp_droplet := _droplet_scene.instantiate()
 		temp_droplet.activate()
+		if DEBUG_POOL:
+			print("[DropletPool] WARN: Pool not ready, created temp droplet")
 		return temp_droplet
 
 	var droplet: Node = null
@@ -117,6 +132,8 @@ func get_droplet() -> Node:
 		if _active_droplets.size() < MAX_POOL_SIZE:
 			droplet = _create_pooled_droplet()
 			_available_pool.erase(droplet)
+			if DEBUG_POOL:
+				print("[DropletPool] Expanded pool (now %d total)" % (_available_pool.size() + _active_droplets.size() + 1))
 		else:
 			# Recycle oldest active droplet
 			while not _active_droplets.is_empty():
