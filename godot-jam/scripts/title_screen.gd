@@ -26,17 +26,15 @@ func _ready() -> void:
 	# Start menu music (deferred to ensure AudioManager is ready)
 	call_deferred("_start_menu_music")
 
-	# If game scene is already loaded, we're ready immediately
-	if Preloader.is_game_scene_ready:
+	# Check if everything is already loaded (scenes, shaders, audio, droplet pool)
+	if Preloader.is_everything_ready:
 		start_prompt.text = "Press SPACE to start"
 	else:
-		Preloader.resource_loaded.connect(_on_resource_loaded)
-
-	# Show preloading status if resources are still loading
-	if not Preloader.is_fully_loaded:
+		# Show loading text and progress bar until ready
+		start_prompt.text = "Loading..."
 		_setup_preload_indicator()
 		Preloader.loading_progress.connect(_on_loading_progress)
-		Preloader.all_resources_loaded.connect(_on_all_resources_loaded)
+		Preloader.everything_ready.connect(_on_everything_ready, CONNECT_ONE_SHOT)
 
 func _start_menu_music() -> void:
 	AudioManager.play_menu_music()
@@ -62,11 +60,10 @@ func _on_loading_progress(progress: float) -> void:
 	if _loading_bar:
 		_loading_bar.value = progress
 
-func _on_resource_loaded(path: String) -> void:
-	if path == GAME_SCENE_PATH and _load_state == LoadState.IDLE:
+func _on_everything_ready() -> void:
+	if _load_state == LoadState.IDLE:
 		start_prompt.text = "Press SPACE to start"
-
-func _on_all_resources_loaded() -> void:
+	# Remove loading indicators
 	if _preload_label:
 		_preload_label.queue_free()
 		_preload_label = null
@@ -94,7 +91,9 @@ func _process(delta: float) -> void:
 
 func _handle_idle_input() -> void:
 	if Input.is_action_just_pressed("jump"):
-		_start_game_loading()
+		# Only allow starting when everything is fully loaded
+		if Preloader.is_everything_ready:
+			_start_game_loading()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if _load_state != LoadState.IDLE:
@@ -113,43 +112,29 @@ func _open_settings() -> void:
 	get_tree().change_scene_to_file("res://scenes/settings.tscn")
 
 func _start_game_loading() -> void:
-	# IMMEDIATE visual feedback - change text instantly
-	_load_state = LoadState.STARTING
-	start_prompt.text = "Starting"
-	_loading_dots = 0
-	_dot_timer = 0.0
+	# Everything is already loaded at this point, transition immediately
+	_load_state = LoadState.TRANSITIONING
+	start_prompt.text = "Go!"
 
-	# Hide preload indicator immediately
+	# Hide preload indicator
 	if _preload_label:
 		_preload_label.visible = false
 	if _loading_bar:
 		_loading_bar.visible = false
 
+	# Transition on next frame for visual feedback
+	call_deferred("_do_transition")
+
+func _do_transition() -> void:
+	GameManager.start_game()
+
 func _check_scene_ready() -> void:
-	# Check if the scene is already preloaded
-	if Preloader.is_game_scene_ready:
-		_transition_to_game()
-	else:
-		# Need to wait for loading - request priority and start threaded load
-		Preloader.request_priority_load(GAME_SCENE_PATH)
-
-		# Start our own threaded load as backup
-		var status := ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH)
-		if status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-			ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
-
-		_load_state = LoadState.LOADING
+	# Legacy - scene should already be ready since we wait for everything
+	_transition_to_game()
 
 func _check_threaded_load() -> void:
-	# First check if preloader finished
-	if Preloader.is_game_scene_ready:
-		_transition_to_game()
-		return
-
-	# Check our threaded request
-	var status := ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH)
-	if status == ResourceLoader.THREAD_LOAD_LOADED:
-		_transition_to_game()
+	# Legacy - scene should already be ready since we wait for everything
+	_transition_to_game()
 
 func _animate_loading_text(delta: float) -> void:
 	_dot_timer += delta

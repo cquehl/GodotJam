@@ -5,6 +5,8 @@ extends Node
 # Handles background music and sound effects with smooth transitions
 # =============================================================================
 
+signal audio_loaded  # Emitted when all audio resources are loaded
+
 # Music tracks
 const MENU_MUSIC := "res://audio/music/_menue_music.mp3"
 const GAMEPLAY_TRACKS := [
@@ -57,6 +59,9 @@ var _cached_sfx: Dictionary = {}
 
 # Track what type of music is playing
 var _playing_menu_music: bool = false
+
+# Loading state
+var is_audio_loaded: bool = false
 
 func _ready() -> void:
 	_setup_audio_buses()
@@ -123,9 +128,15 @@ func _preload_audio() -> void:
 	_sfx_load_index = 0
 	if not _sfx_keys.is_empty():
 		call_deferred("_load_next_sfx")
+	else:
+		# No SFX to load, signal ready immediately
+		is_audio_loaded = true
+		call_deferred("emit_signal", "audio_loaded")
 
 func _load_next_sfx() -> void:
 	if _sfx_load_index >= _sfx_keys.size():
+		is_audio_loaded = true
+		audio_loaded.emit()
 		return
 
 	var sfx_name: String = _sfx_keys[_sfx_load_index]
@@ -138,6 +149,9 @@ func _load_next_sfx() -> void:
 	# Load next SFX on next frame
 	if _sfx_load_index < _sfx_keys.size():
 		call_deferred("_load_next_sfx")
+	else:
+		is_audio_loaded = true
+		audio_loaded.emit()
 
 func _connect_game_signals() -> void:
 	# Connect to game events for automatic SFX
