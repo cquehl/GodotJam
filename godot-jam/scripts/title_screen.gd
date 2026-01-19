@@ -14,6 +14,22 @@ var _loading_dots: int = 0
 var _dot_timer: float = 0.0
 const DOT_INTERVAL := 0.3
 
+# Hints for loading screen
+const HINTS := [
+	"Use WASD or Arrow Keys to move",
+	"Press SPACE to jump over droplets",
+	"Collect power-ups for temporary invincibility",
+	"Stay in the center to react to droplets from any direction",
+	"Jump timing is key - don't jump too early!",
+	"Watch for targeted droplets that aim at you",
+	"The longer you survive, the harder it gets",
+	"Blue droplets are worth more points",
+]
+var _hint_timer: float = 0.0
+var _current_hint_index: int = 0
+const HINT_DURATION := 2.5
+const MIN_LOADING_TIME := 1.5  # Minimum time to show loading screen
+
 # UI references
 @onready var start_prompt: Label = $VBox/StartPrompt
 @onready var vbox: VBoxContainer = $VBox
@@ -21,6 +37,12 @@ const DOT_INTERVAL := 0.3
 # Loading indicator (created dynamically)
 var _loading_bar: ProgressBar = null
 var _preload_label: Label = null
+
+# Loading screen elements
+var _loading_screen: ColorRect = null
+var _hint_label: Label = null
+var _loading_title: Label = null
+var _loading_time: float = 0.0
 
 func _ready() -> void:
 	# Start menu music (deferred to ensure AudioManager is ready)
@@ -77,14 +99,12 @@ func _process(delta: float) -> void:
 			_handle_idle_input()
 
 		LoadState.STARTING:
-			# Show immediate feedback, then check if ready
-			_animate_loading_text(delta)
-			_check_scene_ready()
+			# Show loading screen with hints
+			_update_loading_screen(delta)
 
 		LoadState.LOADING:
 			# Wait for threaded load to complete
-			_animate_loading_text(delta)
-			_check_threaded_load()
+			_update_loading_screen(delta)
 
 		LoadState.TRANSITIONING:
 			pass  # Scene change in progress
@@ -112,43 +132,72 @@ func _open_settings() -> void:
 	get_tree().change_scene_to_file("res://scenes/settings.tscn")
 
 func _start_game_loading() -> void:
-	# Everything is already loaded at this point, transition immediately
-	_load_state = LoadState.TRANSITIONING
-	start_prompt.text = "Go!"
+	_load_state = LoadState.STARTING
+	_loading_time = 0.0
+	_hint_timer = 0.0
+	_current_hint_index = randi() % HINTS.size()
 
-	# Hide preload indicator
-	if _preload_label:
-		_preload_label.visible = false
-	if _loading_bar:
-		_loading_bar.visible = false
+	# Hide title screen elements
+	vbox.visible = false
 
-	# Transition on next frame for visual feedback
-	call_deferred("_do_transition")
+	# Show loading screen with hints
+	_create_loading_screen()
 
-func _do_transition() -> void:
-	GameManager.start_game()
+func _create_loading_screen() -> void:
+	# Full screen dark overlay
+	_loading_screen = ColorRect.new()
+	_loading_screen.color = Color(0.05, 0.05, 0.08, 1.0)
+	_loading_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_loading_screen)
 
-func _check_scene_ready() -> void:
-	# Legacy - scene should already be ready since we wait for everything
-	_transition_to_game()
+	# Container for centered content
+	var container := VBoxContainer.new()
+	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.alignment = BoxContainer.ALIGNMENT_CENTER
+	container.add_theme_constant_override("separation", 40)
+	_loading_screen.add_child(container)
 
-func _check_threaded_load() -> void:
-	# Legacy - scene should already be ready since we wait for everything
-	_transition_to_game()
+	# Loading title
+	_loading_title = Label.new()
+	_loading_title.text = "Loading..."
+	_loading_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_title.add_theme_font_size_override("font_size", 48)
+	container.add_child(_loading_title)
 
-func _animate_loading_text(delta: float) -> void:
+	# Hint label
+	_hint_label = Label.new()
+	_hint_label.text = "TIP: " + HINTS[_current_hint_index]
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint_label.add_theme_font_size_override("font_size", 24)
+	_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 0.9))
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label.custom_minimum_size.x = 600
+	container.add_child(_hint_label)
+
+func _update_loading_screen(delta: float) -> void:
+	_loading_time += delta
+	_hint_timer += delta
+
+	# Animate loading dots
 	_dot_timer += delta
 	if _dot_timer >= DOT_INTERVAL:
 		_dot_timer = 0.0
 		_loading_dots = (_loading_dots + 1) % 4
+		if _loading_title:
+			_loading_title.text = "Loading" + ".".repeat(_loading_dots)
 
-		var dots := ".".repeat(_loading_dots)
-		var base_text := "Starting" if _load_state == LoadState.STARTING else "Loading"
-		start_prompt.text = base_text + dots
+	# Cycle hints
+	if _hint_timer >= HINT_DURATION:
+		_hint_timer = 0.0
+		_current_hint_index = (_current_hint_index + 1) % HINTS.size()
+		if _hint_label:
+			_hint_label.text = "TIP: " + HINTS[_current_hint_index]
 
-func _transition_to_game() -> void:
+	# Transition after minimum time (everything is already loaded)
+	if _loading_time >= MIN_LOADING_TIME and Preloader.is_everything_ready:
+		_do_transition()
+
+func _do_transition() -> void:
 	_load_state = LoadState.TRANSITIONING
-	start_prompt.text = "Go!"
-
-	# Let GameManager handle state reset and scene transition
 	GameManager.start_game()
+
