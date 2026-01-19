@@ -14,6 +14,11 @@ var _loading_dots: int = 0
 var _dot_timer: float = 0.0
 const DOT_INTERVAL := 0.3
 
+# Hint flash animation
+var _flash_timer: float = 0.0
+const FLASH_SPEED := 3.0  # Speed of the flash pulse
+const MIN_TRANSITION_TIME := 0.5  # Minimum time to show loading screen
+
 # Hints for loading screen
 const HINTS := [
 	"Use WASD or Arrow Keys to move",
@@ -75,13 +80,8 @@ func _process(delta: float) -> void:
 
 func _handle_idle_input() -> void:
 	if Input.is_action_just_pressed("jump"):
-		if Preloader.is_everything_ready:
-			# Everything loaded - go straight to game
-			_load_state = LoadState.TRANSITIONING
-			GameManager.start_game()
-		else:
-			# Still loading - show hint screen while we wait
-			_start_game_loading()
+		# Always show loading screen with hints
+		_start_game_loading()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if _load_state != LoadState.IDLE:
@@ -102,6 +102,7 @@ func _open_settings() -> void:
 func _start_game_loading() -> void:
 	_load_state = LoadState.STARTING
 	_hint_timer = 0.0
+	_flash_timer = 0.0
 	_current_hint_index = randi() % HINTS.size()
 
 	# Hide title screen elements
@@ -119,15 +120,16 @@ func _create_loading_screen() -> void:
 
 	# Container for centered content
 	var container := VBoxContainer.new()
-	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	container.alignment = BoxContainer.ALIGNMENT_CENTER
 	container.add_theme_constant_override("separation", 40)
 	_loading_screen.add_child(container)
 
 	# Loading title
 	_loading_title = Label.new()
-	_loading_title.text = "Loading..."
+	_loading_title.text = "Loading Game..."
 	_loading_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_loading_title.add_theme_font_size_override("font_size", 48)
 	container.add_child(_loading_title)
 
@@ -135,14 +137,15 @@ func _create_loading_screen() -> void:
 	_hint_label = Label.new()
 	_hint_label.text = "TIP: " + HINTS[_current_hint_index]
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint_label.add_theme_font_size_override("font_size", 24)
 	_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 0.9))
 	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint_label.custom_minimum_size.x = 600
 	container.add_child(_hint_label)
 
 func _update_loading_screen(delta: float) -> void:
 	_hint_timer += delta
+	_flash_timer += delta
 
 	# Animate loading dots
 	_dot_timer += delta
@@ -150,7 +153,13 @@ func _update_loading_screen(delta: float) -> void:
 		_dot_timer = 0.0
 		_loading_dots = (_loading_dots + 1) % 4
 		if _loading_title:
-			_loading_title.text = "Loading" + ".".repeat(_loading_dots)
+			_loading_title.text = "Loading Game" + ".".repeat(_loading_dots)
+
+	# Flash/pulse the hint label
+	if _hint_label:
+		# Sine wave oscillation between 0.4 and 1.0 alpha
+		var flash_alpha := 0.7 + 0.3 * sin(_flash_timer * FLASH_SPEED)
+		_hint_label.modulate.a = flash_alpha
 
 	# Cycle hints
 	if _hint_timer >= HINT_DURATION:
@@ -159,11 +168,10 @@ func _update_loading_screen(delta: float) -> void:
 		if _hint_label:
 			_hint_label.text = "TIP: " + HINTS[_current_hint_index]
 
-	# Transition as soon as everything is loaded
-	if Preloader.is_everything_ready:
+	# Transition once everything is loaded and minimum time has passed
+	if Preloader.is_everything_ready and _flash_timer >= MIN_TRANSITION_TIME:
 		_do_transition()
 
 func _do_transition() -> void:
 	_load_state = LoadState.TRANSITIONING
 	GameManager.start_game()
-
