@@ -70,8 +70,6 @@ func _ready() -> void:
 	_preload_audio()
 	_connect_game_signals()
 
-	# Start music after a short delay
-	call_deferred("_start_music")
 
 func _setup_audio_buses() -> void:
 	# Create audio buses if they don't exist
@@ -159,10 +157,6 @@ func _connect_game_signals() -> void:
 	GameManager.power_up_started.connect(_on_power_up_started)
 	GameManager.power_up_ended.connect(_on_power_up_ended)
 	GameManager.game_over_triggered.connect(_on_game_over)
-
-func _start_music() -> void:
-	# Don't auto-start music - let scenes control what plays
-	pass
 
 func _process(delta: float) -> void:
 	if _is_crossfading:
