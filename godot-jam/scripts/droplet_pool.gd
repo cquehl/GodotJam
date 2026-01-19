@@ -164,7 +164,8 @@ func return_droplet(droplet: Node) -> void:
 		_active_droplets.erase(droplet)
 
 	droplet.reset_droplet()
-	droplet.process_mode = Node.PROCESS_MODE_DISABLED
+	# Use deferred to avoid physics callback errors
+	droplet.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
 	droplet.visible = false
  
 	# Reparent to pool storage if needed

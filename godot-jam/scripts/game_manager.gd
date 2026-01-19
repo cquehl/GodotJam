@@ -129,6 +129,11 @@ func start_game() -> void:
 	power_up_timer = 0.0
 	immune_timer = 0.0
 
+	# Log game start for debugging
+	var debug_loader := get_node_or_null("/root/DebugLoader")
+	if debug_loader and debug_loader.has_method("log_game_start"):
+		debug_loader.log_game_start()
+
 	# Clear any leftover droplets
 	if DropletPool.is_ready():
 		DropletPool.clear_active_droplets()

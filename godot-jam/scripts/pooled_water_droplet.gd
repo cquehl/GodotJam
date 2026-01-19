@@ -96,7 +96,7 @@ func _create_cached_materials() -> void:
 func activate() -> void:
 	_is_active = true
 	_lifetime_timer = 0.0
-	collision_shape.disabled = false
+	collision_shape.set_deferred("disabled", false)
 	trail_particles.emitting = true
 
 ## Reset to default state for pooling
@@ -114,8 +114,8 @@ func reset_droplet() -> void:
 	shadow.scale = _original_shadow_scale
 	position = Vector3(0, -100, 0)  # Position far below play area
 
-	# Disable collision while pooled
-	collision_shape.disabled = true
+	# Disable collision while pooled (use deferred to avoid physics callback errors)
+	collision_shape.set_deferred("disabled", true)
 
 	# Restore original collision shape (avoids orphaned shape resources)
 	if _original_collision_shape:

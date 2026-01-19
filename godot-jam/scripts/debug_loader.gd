@@ -9,6 +9,7 @@ extends Node
 var _start_time: int = 0
 var _event_times: Dictionary = {}
 var _enabled: bool = true
+var _current_scene_name: String = ""
 
 func _ready() -> void:
 	_start_time = Time.get_ticks_msec()
@@ -35,6 +36,23 @@ func _connect_signals() -> void:
 	if droplet_pool:
 		droplet_pool.pool_ready.connect(_on_pool_ready)
 		_log("Connected to DropletPool signals")
+
+	# Connect to GameManager signals for gameplay tracking
+	var game_manager := get_node_or_null("/root/GameManager")
+	if game_manager:
+		if game_manager.has_signal("score_changed"):
+			game_manager.score_changed.connect(_on_score_changed)
+		if game_manager.has_signal("power_up_started"):
+			game_manager.power_up_started.connect(_on_power_up_started)
+		if game_manager.has_signal("power_up_ended"):
+			game_manager.power_up_ended.connect(_on_power_up_ended)
+		if game_manager.has_signal("game_over_triggered"):
+			game_manager.game_over_triggered.connect(_on_game_over)
+		_log("Connected to GameManager signals")
+
+	# Connect to scene tree for scene change tracking
+	get_tree().tree_changed.connect(_on_tree_changed)
+	_log("Connected to SceneTree signals")
 
 func _log(message: String) -> void:
 	if not _enabled:
@@ -81,3 +99,50 @@ func disable() -> void:
 
 func enable() -> void:
 	_enabled = true
+
+# =============================================================================
+# SCENE TRACKING
+# =============================================================================
+func _on_tree_changed() -> void:
+	# Guard against null tree during scene transitions
+	var tree := get_tree()
+	if not tree:
+		return
+	# Check if the current scene has changed
+	var current_scene := tree.current_scene
+	if current_scene:
+		var scene_name := current_scene.name
+		if scene_name != _current_scene_name:
+			_current_scene_name = scene_name
+			_log("SCENE CHANGED: %s" % scene_name)
+			mark_event("scene_%s" % scene_name.to_lower())
+
+# =============================================================================
+# GAMEPLAY TRACKING
+# =============================================================================
+func _on_score_changed(new_score: int) -> void:
+	# Only log milestone scores to avoid spam
+	if new_score > 0 and (new_score <= 5 or new_score % 10 == 0):
+		_log("Score: %d" % new_score)
+
+func _on_power_up_started() -> void:
+	_log("POWER-UP STARTED")
+	mark_event("power_up_start")
+
+func _on_power_up_ended() -> void:
+	_log("POWER-UP ENDED")
+	mark_event("power_up_end")
+
+func _on_game_over() -> void:
+	var game_manager := get_node_or_null("/root/GameManager")
+	var final_score := 0
+	var game_time := 0.0
+	if game_manager:
+		final_score = game_manager.last_score
+		game_time = game_manager.game_time
+	_log("GAME OVER - Score: %d, Time: %.1fs" % [final_score, game_time])
+	mark_event("game_over")
+
+func log_game_start() -> void:
+	_log("GAME STARTED")
+	mark_event("game_start")
