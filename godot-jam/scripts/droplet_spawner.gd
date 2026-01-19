@@ -116,39 +116,6 @@ func _spawn_targeted_droplet() -> void:
 	droplet.speed = targeted_droplet_speed
 	droplet.set_direction(target_pos - spawn_pos)
 
-
-func _spawn_huge_targeted_droplet() -> void:
-	if orb == null:
-		return
-	var droplet := _get_droplet()
-	if not droplet:
-		return
-
-	if not _use_pool:
-		add_child(droplet)
-	droplet.make_huge()
-
-	var radius: float = GameManager.platform_radius
-	var spawn_distance := radius + SPAWN_DISTANCE_OFFSET
-
-	# Get current orb position as target
-	var target_xz := Vector2(orb.position.x, orb.position.z)
-
-	# Pick a random spawn angle
-	var spawn_angle: float = randf() * TAU
-	var spawn_pos := Vector3(
-		cos(spawn_angle) * spawn_distance,
-		0.3,
-		sin(spawn_angle) * spawn_distance
-	)
-
-	# Direction towards orb
-	var target_pos := Vector3(target_xz.x, 0.3, target_xz.y)
-
-	droplet.position = spawn_pos
-	droplet.speed = targeted_droplet_speed
-	droplet.set_direction(target_pos - spawn_pos)
-
 func _spawn_targeted_barrage(count: int) -> void:
 	# Spawn multiple droplets with delays
 	for i in range(count):

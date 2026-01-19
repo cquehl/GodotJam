@@ -8,7 +8,6 @@ var platform_radius: float = 7  # Radius of the circular platform
 # =============================================================================
 # ORB SETTINGS (3D)
 # =============================================================================
-var orb_radius: float = 0.5  # Orb size
 var orb_base_height: float = 0.5  # Resting height (orb radius so it sits on platform)
 var move_speed: float = 8.0  # Units per second
 var jump_velocity: float = 8.0  # Initial upward velocity
@@ -44,10 +43,8 @@ const IMMUNITY_DURATION: float = 2.0
 # SIGNALS
 # =============================================================================
 signal score_changed(new_score: int)
-signal game_paused(paused: bool)
 signal power_up_started
 signal power_up_ended
-signal immunity_started
 signal immunity_ended
 signal game_over_triggered
 
@@ -65,7 +62,6 @@ func reset_score() -> void:
 func toggle_pause() -> void:
 	is_paused = !is_paused
 	get_tree().paused = is_paused
-	game_paused.emit(is_paused)
 
 func _process(delta: float) -> void:
 	if game_active and not is_paused:
@@ -95,7 +91,6 @@ func end_power_up() -> void:
 	# Start immunity period
 	is_immune = true
 	immune_timer = IMMUNITY_DURATION
-	immunity_started.emit()
 
 func game_over() -> void:
 	if _transitioning:

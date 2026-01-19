@@ -1,6 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://dff12345game"]
+[gd_scene load_steps=6 format=3 uid="uid://c36sq4sha4m76"]
 
-[ext_resource type="Script" uid="uid://r54balrcgtuo" path="res://scripts/orb_controller.gd" id="1_orb_ctrl"]
+[ext_resource type="Script" path="res://scripts/orb_controller.gd" id="1_orb_ctrl"]
 [ext_resource type="Shader" uid="uid://lt7la1fiee5a" path="res://shaders/plane.gdshader" id="2_plane_shader"]
 [ext_resource type="Shader" uid="uid://bpxey4os2nqv3" path="res://shaders/orb.gdshader" id="3_orb_shader"]
 
