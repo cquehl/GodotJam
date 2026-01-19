@@ -42,8 +42,8 @@ func _start_gradual_init() -> void:
 	_is_initializing = true
 	_init_count = 0
 
-	if DEBUG_POOL:
-		print("[DropletPool] Starting gradual initialization (target: %d droplets)" % INITIAL_POOL_SIZE)
+	_debug_log("Starting gradual initialization (target: %d droplets)" % INITIAL_POOL_SIZE)
+	DebugLoader.task_start("DropletPool.init", "%d droplets" % INITIAL_POOL_SIZE)
 
 	# Use late binding for Preloader to avoid circular autoload dependency
 	var preloader := get_node_or_null("/root/Preloader")
@@ -52,13 +52,16 @@ func _start_gradual_init() -> void:
 	# Falls back to synchronous load if preloader hasn't finished
 	if preloader and preloader.is_resource_loaded(WATER_DROPLET_PATH):
 		_droplet_scene = preloader.get_water_droplet_scene()
+		_debug_log("Got droplet scene from Preloader cache")
 	else:
 		_droplet_scene = load(WATER_DROPLET_PATH)
+		_debug_log("Loaded droplet scene synchronously (Preloader not ready)")
 
 	# Get pre-compiled shaders from Preloader's cache (avoids reloading)
 	if preloader:
 		water_shader = preloader.get_resource("res://shaders/water_droplet.gdshader") as Shader
 		electric_shader = preloader.get_resource("res://shaders/electric_orb.gdshader") as Shader
+		_debug_log("Got shaders from Preloader cache")
 
 	# Create hidden parent for pooled objects
 	_pool_parent = Node.new()
@@ -68,21 +71,24 @@ func _start_gradual_init() -> void:
 	# Start creating droplets one per frame
 	call_deferred("_create_next_pooled_droplet")
 
+func _debug_log(message: String) -> void:
+	if DEBUG_POOL and DebugLoader:
+		DebugLoader._log("[DropletPool] " + message)
+
 func _create_next_pooled_droplet() -> void:
 	if _init_count >= INITIAL_POOL_SIZE:
 		# Done initializing
 		_is_initialized = true
 		_is_initializing = false
-		if DEBUG_POOL:
-			print("[DropletPool] Pool ready! (%d droplets)" % _available_pool.size())
+		_debug_log("Pool ready! (%d droplets)" % _available_pool.size())
+		DebugLoader.task_end("DropletPool.init", "%d droplets ready" % _available_pool.size())
 		pool_ready.emit()
 		return
 
 	_create_pooled_droplet()
 	_init_count += 1
 
-	if DEBUG_POOL:
-		print("[DropletPool] Created droplet %d/%d" % [_init_count, INITIAL_POOL_SIZE])
+	_debug_log("Created droplet %d/%d" % [_init_count, INITIAL_POOL_SIZE])
 
 	# Schedule next droplet creation
 	if _init_count < INITIAL_POOL_SIZE:
@@ -90,8 +96,8 @@ func _create_next_pooled_droplet() -> void:
 	else:
 		_is_initialized = true
 		_is_initializing = false
-		if DEBUG_POOL:
-			print("[DropletPool] Pool ready! (%d droplets)" % _available_pool.size())
+		_debug_log("Pool ready! (%d droplets)" % _available_pool.size())
+		DebugLoader.task_end("DropletPool.init", "%d droplets ready" % _available_pool.size())
 		pool_ready.emit()
 
 func _create_pooled_droplet() -> Node:
@@ -114,8 +120,7 @@ func get_droplet() -> Node:
 			_droplet_scene = load(WATER_DROPLET_PATH)
 		var temp_droplet := _droplet_scene.instantiate()
 		temp_droplet.activate()
-		if DEBUG_POOL:
-			print("[DropletPool] WARN: Pool not ready, created temp droplet")
+		_debug_log("WARN: Pool not ready, created temp droplet")
 		return temp_droplet
 
 	var droplet: Node = null
@@ -132,10 +137,10 @@ func get_droplet() -> Node:
 		if _active_droplets.size() < MAX_POOL_SIZE:
 			droplet = _create_pooled_droplet()
 			_available_pool.erase(droplet)
-			if DEBUG_POOL:
-				print("[DropletPool] Expanded pool (now %d total)" % (_available_pool.size() + _active_droplets.size() + 1))
+			_debug_log("Expanded pool (now %d total)" % (_available_pool.size() + _active_droplets.size() + 1))
 		else:
 			# Recycle oldest active droplet
+			_debug_log("Pool at max capacity (%d), recycling" % MAX_POOL_SIZE)
 			while not _active_droplets.is_empty():
 				var candidate = _active_droplets.pop_front()
 				if is_instance_valid(candidate):

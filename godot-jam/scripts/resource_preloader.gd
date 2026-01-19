@@ -60,14 +60,20 @@ var is_everything_ready: bool = false
 const DEBUG_PRELOADER := true
 
 func _ready() -> void:
+	_debug_log("Preloader._ready() - deferring background loading")
 	# Start loading immediately - title screen will wait for completion
 	call_deferred("_start_background_loading")
 
 var _shader_index: int = 0
 
+func _debug_log(message: String) -> void:
+	if DEBUG_PRELOADER and DebugLoader:
+		DebugLoader._log("[Preloader] " + message)
+
 func _start_background_loading() -> void:
-	if DEBUG_PRELOADER:
-		print("[Preloader] Starting background loading...")
+	_debug_log("Starting background loading...")
+	DebugLoader.task_start("Preloader.scenes", "%d scenes" % PRELOAD_ORDER.size())
+	DebugLoader.task_start("Preloader.shaders", "%d shaders" % SHADER_PATHS.size())
 
 	# Queue resources for background loading FIRST (scenes are more important)
 	_loading_queue.clear()
@@ -104,8 +110,8 @@ func _compile_next_shader() -> void:
 	# Compile one shader per frame to avoid stutters
 	if _shader_index >= SHADER_PATHS.size():
 		is_shaders_compiled = true
-		if DEBUG_PRELOADER:
-			print("[Preloader] All shaders compiled (%d total)" % _compiled_shaders.size())
+		_debug_log("All shaders compiled (%d total)" % _compiled_shaders.size())
+		DebugLoader.task_end("Preloader.shaders", "%d compiled" % _compiled_shaders.size())
 		_on_shaders_compiled()
 		return
 
@@ -113,8 +119,7 @@ func _compile_next_shader() -> void:
 	var shader := load(shader_path) as Shader
 	if shader:
 		_compiled_shaders.append(shader)
-		if DEBUG_PRELOADER:
-			print("[Preloader] Compiled shader %d/%d: %s" % [_shader_index + 1, SHADER_PATHS.size(), shader_path.get_file()])
+		_debug_log("Compiled shader %d/%d: %s" % [_shader_index + 1, SHADER_PATHS.size(), shader_path.get_file()])
 
 	_shader_index += 1
 
@@ -123,8 +128,8 @@ func _compile_next_shader() -> void:
 		call_deferred("_compile_next_shader")
 	else:
 		is_shaders_compiled = true
-		if DEBUG_PRELOADER:
-			print("[Preloader] All shaders compiled (%d total)" % _compiled_shaders.size())
+		_debug_log("All shaders compiled (%d total)" % _compiled_shaders.size())
+		DebugLoader.task_end("Preloader.shaders", "%d compiled" % _compiled_shaders.size())
 		_on_shaders_compiled()
 
 func _on_shaders_compiled() -> void:
@@ -138,30 +143,29 @@ func _on_shaders_compiled() -> void:
 
 func _on_pool_ready() -> void:
 	is_pool_ready = true
-	if DEBUG_PRELOADER:
-		print("[Preloader] DropletPool ready")
+	_debug_log("DropletPool ready")
 	_check_everything_ready()
 
 func _on_audio_loaded() -> void:
 	is_audio_ready = true
-	if DEBUG_PRELOADER:
-		print("[Preloader] Audio ready")
+	_debug_log("Audio ready")
 	_check_everything_ready()
 
 func _check_everything_ready() -> void:
-	if DEBUG_PRELOADER:
-		print("[Preloader] Status: scenes=%s shaders=%s pool=%s audio=%s" % [is_fully_loaded, is_shaders_compiled, is_pool_ready, is_audio_ready])
+	_debug_log("Status check: scenes=%s shaders=%s pool=%s audio=%s" % [is_fully_loaded, is_shaders_compiled, is_pool_ready, is_audio_ready])
 	if is_fully_loaded and is_shaders_compiled and is_pool_ready and is_audio_ready:
 		if not is_everything_ready:
 			is_everything_ready = true
-			if DEBUG_PRELOADER:
-				print("[Preloader] === EVERYTHING READY ===")
+			_debug_log("=== EVERYTHING READY ===")
+			DebugLoader.set_phase("ready")
 			everything_ready.emit()
 
 func _load_next_resource() -> void:
 	if _loading_queue.is_empty():
 		_is_loading = false
 		is_fully_loaded = true
+		_debug_log("All scenes loaded")
+		DebugLoader.task_end("Preloader.scenes", "%d loaded" % _loaded_count)
 		all_resources_loaded.emit()
 		_check_everything_ready()
 		return
@@ -190,16 +194,14 @@ func _process(_delta: float) -> void:
 			_cached_resources[_current_loading] = resource
 			_loaded_count += 1
 			_update_loading_flags(_current_loading)
-			if DEBUG_PRELOADER:
-				print("[Preloader] Loaded %d/%d: %s" % [_loaded_count, _total_to_load, _current_loading.get_file()])
+			_debug_log("Loaded %d/%d: %s" % [_loaded_count, _total_to_load, _current_loading.get_file()])
 			resource_loaded.emit(_current_loading)
 			loading_progress.emit(float(_loaded_count) / float(_total_to_load))
 			_load_next_resource()
 
 		ResourceLoader.THREAD_LOAD_FAILED, ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 			push_warning("Failed to load: " + _current_loading)
-			if DEBUG_PRELOADER:
-				print("[Preloader] FAILED: %s" % _current_loading)
+			_debug_log("FAILED: %s" % _current_loading)
 			_loaded_count += 1
 			_load_next_resource()
 

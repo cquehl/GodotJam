@@ -71,9 +71,9 @@ theme_override_font_sizes/normal_font_size = 48
 text = "[center]WASD / ←↑↓→ - Move
 SPACE - Jump
 
-Avoid [color=#4d99ff]blue[/color] water drops
-Collect [color=#33ff4d]green[/color] drops for points
-Collect [color=#ffd933]yellow[/color] drops to grow[/center]"
+Avoid [color=#3399ff]blue[/color] water drops
+Collect [color=#7cfc00]green[/color] drops for points
+Collect [color=#ffff00]yellow[/color] drops to grow[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
@@ -91,6 +91,6 @@ horizontal_alignment = 1
 [node name="MenuHints" type="Label" parent="VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 0.8)
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 text = "Press C for Credits  |  Press S for Settings"
 horizontal_alignment = 1
