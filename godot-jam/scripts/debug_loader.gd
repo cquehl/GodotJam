@@ -2,7 +2,7 @@ extends Node
 
 # =============================================================================
 # DEBUG LOADER
-# Logs timing information for resource loading events
+# Comprehensive debug logging for all background tasks and startup timing
 # Works in both Godot editor and web browser (via print which maps to console.log)
 # =============================================================================
 
@@ -11,9 +11,25 @@ var _event_times: Dictionary = {}
 var _enabled: bool = true
 var _current_scene_name: String = ""
 
+# Task tracking
+var _active_tasks: Dictionary = {}  # task_name -> start_time
+var _completed_tasks: Dictionary = {}  # task_name -> {start, end, duration}
+
+# Frame timing for lag detection
+var _frame_times: Array[float] = []
+var _last_frame_time: int = 0
+var _frame_count: int = 0
+const LAG_THRESHOLD_MS := 50  # Log frames taking longer than 50ms
+const TRACK_FRAMES := 60  # Track last 60 frames for average
+
+# Startup phase tracking
+var _startup_phase: String = "boot"
+
 func _ready() -> void:
 	_start_time = Time.get_ticks_msec()
-	_log("DebugLoader initialized")
+	_last_frame_time = _start_time
+	_log("=== DEBUG LOADER INITIALIZED ===")
+	_log("Startup phase: boot")
 
 	# Connect to Preloader signals (use late binding since we load before Preloader)
 	call_deferred("_connect_signals")
@@ -54,6 +70,25 @@ func _connect_signals() -> void:
 	get_tree().tree_changed.connect(_on_tree_changed)
 	_log("Connected to SceneTree signals")
 
+func _process(_delta: float) -> void:
+	if not _enabled:
+		return
+
+	var now := Time.get_ticks_msec()
+	var frame_duration := now - _last_frame_time
+	_last_frame_time = now
+	_frame_count += 1
+
+	# Track frame times
+	_frame_times.append(frame_duration)
+	if _frame_times.size() > TRACK_FRAMES:
+		_frame_times.pop_front()
+
+	# Log lag spikes during startup (first 5 seconds)
+	var elapsed := now - _start_time
+	if elapsed < 5000 and frame_duration > LAG_THRESHOLD_MS:
+		_log("LAG SPIKE: Frame %d took %dms (threshold: %dms)" % [_frame_count, frame_duration, LAG_THRESHOLD_MS])
+
 func _log(message: String) -> void:
 	if not _enabled:
 		return
@@ -66,6 +101,45 @@ func mark_event(event_name: String) -> void:
 	var elapsed := Time.get_ticks_msec() - _start_time
 	_event_times[event_name] = elapsed
 	_log("EVENT: %s" % event_name)
+
+# =============================================================================
+# TASK TRACKING API
+# Use these to track background tasks with start/end timing
+# =============================================================================
+
+## Start tracking a task
+func task_start(task_name: String, details: String = "") -> void:
+	var now := Time.get_ticks_msec() - _start_time
+	_active_tasks[task_name] = now
+	if details.is_empty():
+		_log("TASK START: %s" % task_name)
+	else:
+		_log("TASK START: %s - %s" % [task_name, details])
+
+## Mark a task as completed
+func task_end(task_name: String, details: String = "") -> void:
+	var now := Time.get_ticks_msec() - _start_time
+	var start_time: int = _active_tasks.get(task_name, now)
+	var duration := now - start_time
+	_active_tasks.erase(task_name)
+	_completed_tasks[task_name] = {"start": start_time, "end": now, "duration": duration}
+	if details.is_empty():
+		_log("TASK END: %s (%dms)" % [task_name, duration])
+	else:
+		_log("TASK END: %s (%dms) - %s" % [task_name, duration, details])
+
+## Log a task step (for multi-step tasks)
+func task_step(task_name: String, step: String) -> void:
+	var now := Time.get_ticks_msec() - _start_time
+	var start_time: int = _active_tasks.get(task_name, now)
+	var elapsed := now - start_time
+	_log("  [%s +%dms] %s" % [task_name, elapsed, step])
+
+## Set the current startup phase
+func set_phase(phase: String) -> void:
+	_startup_phase = phase
+	_log("=== PHASE: %s ===" % phase.to_upper())
+	mark_event("phase_%s" % phase)
 
 func _on_resource_loaded(resource_path: String) -> void:
 	_log("Resource loaded: %s" % resource_path)
@@ -90,9 +164,39 @@ func _print_summary() -> void:
 	var total_time := Time.get_ticks_msec() - _start_time
 	_log("=== LOADING SUMMARY ===")
 	_log("Total load time: %.3fs" % (total_time / 1000.0))
-	for event_name in _event_times:
-		var event_time: int = _event_times[event_name]
-		_log("  %s: %.3fs" % [event_name, event_time / 1000.0])
+	_log("Total frames: %d" % _frame_count)
+
+	# Frame timing stats
+	if not _frame_times.is_empty():
+		var sum := 0.0
+		var max_frame := 0.0
+		for ft in _frame_times:
+			sum += ft
+			if ft > max_frame:
+				max_frame = ft
+		var avg := sum / _frame_times.size()
+		_log("Avg frame time: %.1fms, Max: %.1fms" % [avg, max_frame])
+
+	# Task timing breakdown
+	if not _completed_tasks.is_empty():
+		_log("--- Task Timings ---")
+		for task_name in _completed_tasks:
+			var task_data: Dictionary = _completed_tasks[task_name]
+			_log("  %s: %dms (started at %.3fs)" % [task_name, task_data.duration, task_data.start / 1000.0])
+
+	# Still active tasks (shouldn't happen)
+	if not _active_tasks.is_empty():
+		_log("--- Still Active Tasks (WARN) ---")
+		for task_name in _active_tasks:
+			var start_time: int = _active_tasks[task_name]
+			_log("  %s: started at %.3fs" % [task_name, start_time / 1000.0])
+
+	# Events
+	if not _event_times.is_empty():
+		_log("--- Events ---")
+		for event_name in _event_times:
+			var event_time: int = _event_times[event_name]
+			_log("  %s: %.3fs" % [event_name, event_time / 1000.0])
 
 func disable() -> void:
 	_enabled = false
