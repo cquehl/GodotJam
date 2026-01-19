@@ -21,6 +21,10 @@ var gold_height: float = 0.3  # Same as base height for easy collection
 var _lifetime_timer: float = 0.0
 var _max_lifetime: float = 6.0
 var _is_active: bool = false
+var _bob_time: float = 0.0  # Accumulated time for bobbing animation
+
+# Cached reference to current material for _update_powerup_visuals
+var _current_material: ShaderMaterial = null
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var shadow: MeshInstance3D = $Shadow
@@ -84,6 +88,10 @@ func _create_cached_materials() -> void:
 	_gold_material.set_shader_parameter("core_color", Color(1.0, 1.0, 0.8, 1.0))
 	_gold_material.set_shader_parameter("glow_intensity", 3.0)
 
+	# Set default material reference (water is the default type)
+	_current_material = _water_material
+	mesh.set_surface_override_material(0, _water_material)
+
 ## Activate the droplet for use
 func activate() -> void:
 	_is_active = true
@@ -115,6 +123,8 @@ func reset_droplet() -> void:
 
 	# Reset to water material
 	mesh.set_surface_override_material(0, _water_material)
+	_current_material = _water_material
+	_bob_time = 0.0
 
 	# Stop particles
 	trail_particles.emitting = false
@@ -132,8 +142,9 @@ func _process(delta: float) -> void:
 	# Movement
 	position += velocity * delta
 
-	# Bobbing motion
-	var bob_offset := sin(Time.get_ticks_msec() * 0.01) * 0.1
+	# Bobbing motion (using accumulated delta instead of Time.get_ticks_msec())
+	_bob_time += delta * 10.0  # Equivalent speed to the old 0.01 multiplier
+	var bob_offset := sin(_bob_time) * 0.1
 	var height := gold_height if is_gold else base_height
 	position.y = height + bob_offset
 
@@ -148,21 +159,20 @@ func _process(delta: float) -> void:
 		_update_powerup_visuals(delta)
 
 func _update_powerup_visuals(delta: float) -> void:
-	var mat := mesh.get_surface_override_material(0) as ShaderMaterial
-	if not mat:
+	if not _current_material:
 		return
 
-	var opacity_param = mat.get_shader_parameter("opacity")
+	var opacity_param = _current_material.get_shader_parameter("opacity")
 	var current_opacity: float = opacity_param if opacity_param != null else 1.0
 	var target_opacity := 1.0
 
 	if GameManager.is_powered_up:
-		# Smooth sine wave oscillation between 0.15 and 0.85
-		var wave := sin(Time.get_ticks_msec() * 0.005) * 0.5 + 0.5  # 0 to 1
+		# Smooth sine wave oscillation between 0.15 and 0.85 (reuse _bob_time for consistency)
+		var wave := sin(_bob_time * 0.5) * 0.5 + 0.5  # 0 to 1
 		target_opacity = lerpf(0.15, 0.85, wave)
 
 	current_opacity = lerpf(current_opacity, target_opacity, delta * 8.0)
-	mat.set_shader_parameter("opacity", current_opacity)
+	_current_material.set_shader_parameter("opacity", current_opacity)
 
 func set_direction(dir: Vector3) -> void:
 	velocity = dir.normalized() * speed
@@ -174,6 +184,7 @@ func make_collectible() -> void:
 	is_collectible = true
 	trail_particles.emitting = false
 	mesh.set_surface_override_material(0, _electric_material)
+	_current_material = _electric_material
 
 func make_large() -> void:
 	mesh.scale = _original_mesh_scale * LARGE_SCALE
@@ -206,6 +217,7 @@ func make_gold() -> void:
 	_scale_collision(GOLD_SCALE)
 
 	mesh.set_surface_override_material(0, _gold_material)
+	_current_material = _gold_material
 
 func _scale_collision(scale_factor: float) -> void:
 	if _original_collision_shape:
