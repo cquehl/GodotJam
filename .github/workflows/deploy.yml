@@ -1,9 +1,10 @@
 name: Deploy to itch.io
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+  # Disabled auto-deploy to preserve jam submission (v1.0.0)
+  # push:
+  #   branches: [main]
+  workflow_dispatch:  # Manual deploy only
 
 env:
   GAME_NAME: "minijam"
