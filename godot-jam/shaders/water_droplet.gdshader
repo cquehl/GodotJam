@@ -3,13 +3,14 @@ shader_type spatial;
 // Original render mode: blend_mix, depth_prepass_alpha, cull_back;
 render_mode blend_mix, cull_back;
 
-// Metaball-style bright blue droplet
-uniform vec3 deep_color : source_color = vec3(0.0, 0.3, 1.0);
-uniform vec3 mid_color : source_color = vec3(0.1, 0.5, 1.0);
-uniform vec3 rim_color : source_color = vec3(0.3, 0.8, 1.0);
+// Metaball-style bright blue droplet - vibrant glow version
+uniform vec3 deep_color : source_color = vec3(0.1, 0.5, 1.0);
+uniform vec3 mid_color : source_color = vec3(0.3, 0.7, 1.0);
+uniform vec3 rim_color : source_color = vec3(0.5, 0.9, 1.0);
 uniform float rim_power : hint_range(1.0, 8.0) = 1.5;
 uniform float rim_intensity : hint_range(0.0, 3.0) = 1.5;
 uniform float inner_glow : hint_range(0.0, 2.0) = 0.8;
+uniform float glow_intensity : hint_range(0.0, 5.0) = 2.0;
 uniform float tail_length : hint_range(0.0, 3.0) = 3.0;
 uniform float tail_width : hint_range(0.0, 1.0) = 0.14;
 uniform float opacity : hint_range(0.0, 1.0) = 1.0;
@@ -35,21 +36,27 @@ void vertex() {
 }
 
 void fragment() {
-    // SIMPLIFIED: Basic color gradient without expensive fresnel
     // Tail fades to lighter blue
     float tail_blend = smoothstep(0.0, 0.8, tail_factor);
     vec3 base_color = mix(mid_color, mid_color * 1.2, tail_blend);
 
-    // Simple view-based shading (cheaper than fresnel)
-    float shade = max(dot(NORMAL, VIEW), 0.0);
-    base_color = mix(deep_color, base_color, shade);
+    // Fresnel for edge glow - gives that electric/glowing look
+    float fresnel = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), 2.5);
+
+    // Blend colors based on view angle
+    base_color = mix(deep_color, base_color, max(dot(NORMAL, VIEW), 0.0));
+    base_color += rim_color * fresnel * 0.4;
+
+    // Strong emission for vibrant glow
+    vec3 emission_color = mid_color * glow_intensity * 0.8;
+    emission_color += rim_color * fresnel * 1.2;
 
     ALBEDO = base_color;
-    EMISSION = base_color * 0.2 * opacity;
+    EMISSION = emission_color * opacity;
     ALPHA = 0.9 * opacity;
     METALLIC = 0.0;
-    ROUGHNESS = 0.4;
-    SPECULAR = 0.5;
+    ROUGHNESS = 0.3;
+    SPECULAR = 0.6;
 }
 
 /*

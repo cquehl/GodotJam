@@ -31,7 +31,18 @@ const HINTS := [
 ]
 var _hint_timer: float = 0.0
 var _current_hint_index: int = 0
-const HINT_DURATION := 3.67
+const HINT_DURATION := 3.5
+
+# Colorful hint colors (matching game over screen style)
+const HINT_COLORS := [
+	Color.YELLOW,
+	Color(0.2, 0.6, 1.0),      # Neon blue
+	Color.LAWN_GREEN,
+	Color(0.7, 0.3, 1.0),      # Neon purple
+	Color.ORANGE,
+	Color(0.184, 0.961, 0.859), # Cyan
+	Color(1.0, 0.2, 0.8),      # Neon magenta
+]
 
 # UI references
 @onready var start_prompt: Label = $VBox/StartPrompt
@@ -142,8 +153,8 @@ func _create_loading_screen() -> void:
 	_hint_label.text = "TIP: " + HINTS[_current_hint_index]
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_hint_label.custom_minimum_size.x = 500
-	_hint_label.add_theme_font_size_override("font_size", 24)
-	_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 0.9))
+	_hint_label.add_theme_font_size_override("font_size", 32)
+	_hint_label.add_theme_color_override("font_color", HINT_COLORS[_current_hint_index])
 	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	var hint_center := CenterContainer.new()
@@ -169,12 +180,13 @@ func _update_loading_screen(delta: float) -> void:
 		var flash_alpha := 0.7 + 0.3 * sin(_flash_timer * FLASH_SPEED)
 		_hint_label.modulate.a = flash_alpha
 
-	# Cycle hints
+	# Cycle hints with color change
 	if _hint_timer >= HINT_DURATION:
 		_hint_timer = 0.0
 		_current_hint_index = (_current_hint_index + 1) % HINTS.size()
 		if _hint_label:
 			_hint_label.text = "TIP: " + HINTS[_current_hint_index]
+			_hint_label.add_theme_color_override("font_color", HINT_COLORS[_current_hint_index])
 
 	# Transition once everything is loaded and minimum time has passed
 	if Preloader.is_everything_ready and _flash_timer >= MIN_TRANSITION_TIME:
