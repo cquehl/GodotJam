@@ -194,6 +194,8 @@ func _start_music_stream(stream: AudioStream, is_menu: bool) -> void:
 	if stream == null:
 		return
 
+	_playing_menu_music = is_menu
+
 	if _active_player.playing:
 		# Crossfade to new track
 		var new_player := _music_player_a if _active_player == _music_player_b else _music_player_b
