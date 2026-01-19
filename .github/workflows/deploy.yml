@@ -16,16 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compress audio files
-        run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
-          cd godot-jam/audio/music
-          for f in *.mp3; do
-            ffmpeg -i "$f" -b:a 128k -y "compressed_$f"
-            mv "compressed_$f" "$f"
-          done
-          ls -lh *.mp3
-
       - name: Export Web
         id: export
         uses: firebelley/godot-export@v7.0.0
