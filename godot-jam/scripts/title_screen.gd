@@ -28,70 +28,34 @@ const HINTS := [
 var _hint_timer: float = 0.0
 var _current_hint_index: int = 0
 const HINT_DURATION := 2.5
-const MIN_LOADING_TIME := 1.5  # Minimum time to show loading screen
 
 # UI references
 @onready var start_prompt: Label = $VBox/StartPrompt
 @onready var vbox: VBoxContainer = $VBox
 
-# Loading indicator (created dynamically)
-var _loading_bar: ProgressBar = null
-var _preload_label: Label = null
-
 # Loading screen elements
 var _loading_screen: ColorRect = null
 var _hint_label: Label = null
 var _loading_title: Label = null
-var _loading_time: float = 0.0
 
 func _ready() -> void:
 	# Start menu music (deferred to ensure AudioManager is ready)
 	call_deferred("_start_menu_music")
 
-	# Check if everything is already loaded (scenes, shaders, audio, droplet pool)
-	if Preloader.is_everything_ready:
-		start_prompt.text = "Press SPACE to start"
-	else:
-		# Show loading text and progress bar until ready
-		start_prompt.text = "Loading..."
-		_setup_preload_indicator()
-		Preloader.loading_progress.connect(_on_loading_progress)
+	# Show start prompt immediately - player can press anytime
+	start_prompt.text = "Press SPACE to start"
+
+	# Connect to loading signals for hint screen (if player starts before load completes)
+	if not Preloader.is_everything_ready:
 		Preloader.everything_ready.connect(_on_everything_ready, CONNECT_ONE_SHOT)
 
 func _start_menu_music() -> void:
 	AudioManager.play_menu_music()
 
-func _setup_preload_indicator() -> void:
-	_preload_label = Label.new()
-	_preload_label.text = "Loading resources..."
-	_preload_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_preload_label.add_theme_font_size_override("font_size", 24)
-	_preload_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.7))
-
-	_loading_bar = ProgressBar.new()
-	_loading_bar.custom_minimum_size = Vector2(400, 8)
-	_loading_bar.max_value = 1.0
-	_loading_bar.value = Preloader.get_loading_progress()
-	_loading_bar.show_percentage = false
-	_loading_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-
-	vbox.add_child(_preload_label)
-	vbox.add_child(_loading_bar)
-
-func _on_loading_progress(progress: float) -> void:
-	if _loading_bar:
-		_loading_bar.value = progress
-
 func _on_everything_ready() -> void:
-	if _load_state == LoadState.IDLE:
-		start_prompt.text = "Press SPACE to start"
-	# Remove loading indicators
-	if _preload_label:
-		_preload_label.queue_free()
-		_preload_label = null
-	if _loading_bar:
-		_loading_bar.queue_free()
-		_loading_bar = null
+	# If we're on the loading screen, transition now
+	if _load_state == LoadState.STARTING or _load_state == LoadState.LOADING:
+		_do_transition()
 
 func _process(delta: float) -> void:
 	match _load_state:
@@ -111,8 +75,12 @@ func _process(delta: float) -> void:
 
 func _handle_idle_input() -> void:
 	if Input.is_action_just_pressed("jump"):
-		# Only allow starting when everything is fully loaded
 		if Preloader.is_everything_ready:
+			# Everything loaded - go straight to game
+			_load_state = LoadState.TRANSITIONING
+			GameManager.start_game()
+		else:
+			# Still loading - show hint screen while we wait
 			_start_game_loading()
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -133,7 +101,6 @@ func _open_settings() -> void:
 
 func _start_game_loading() -> void:
 	_load_state = LoadState.STARTING
-	_loading_time = 0.0
 	_hint_timer = 0.0
 	_current_hint_index = randi() % HINTS.size()
 
@@ -175,7 +142,6 @@ func _create_loading_screen() -> void:
 	container.add_child(_hint_label)
 
 func _update_loading_screen(delta: float) -> void:
-	_loading_time += delta
 	_hint_timer += delta
 
 	# Animate loading dots
@@ -193,8 +159,8 @@ func _update_loading_screen(delta: float) -> void:
 		if _hint_label:
 			_hint_label.text = "TIP: " + HINTS[_current_hint_index]
 
-	# Transition after minimum time (everything is already loaded)
-	if _loading_time >= MIN_LOADING_TIME and Preloader.is_everything_ready:
+	# Transition as soon as everything is loaded
+	if Preloader.is_everything_ready:
 		_do_transition()
 
 func _do_transition() -> void:
