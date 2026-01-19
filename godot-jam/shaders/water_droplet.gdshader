@@ -1,5 +1,7 @@
 shader_type spatial;
-render_mode blend_mix, depth_prepass_alpha, cull_back;
+// SIMPLIFIED VERSION - removed depth_prepass_alpha and fresnel for WebGL performance
+// Original render mode: blend_mix, depth_prepass_alpha, cull_back;
+render_mode blend_mix, cull_back;
 
 // Metaball-style bright blue droplet
 uniform vec3 deep_color : source_color = vec3(0.0, 0.3, 1.0);
@@ -33,6 +35,26 @@ void vertex() {
 }
 
 void fragment() {
+    // SIMPLIFIED: Basic color gradient without expensive fresnel
+    // Tail fades to lighter blue
+    float tail_blend = smoothstep(0.0, 0.8, tail_factor);
+    vec3 base_color = mix(mid_color, mid_color * 1.2, tail_blend);
+
+    // Simple view-based shading (cheaper than fresnel)
+    float shade = max(dot(NORMAL, VIEW), 0.0);
+    base_color = mix(deep_color, base_color, shade);
+
+    ALBEDO = base_color;
+    EMISSION = base_color * 0.2 * opacity;
+    ALPHA = 0.9 * opacity;
+    METALLIC = 0.0;
+    ROUGHNESS = 0.4;
+    SPECULAR = 0.5;
+}
+
+/*
+// ============ ORIGINAL METABALL FRAGMENT (commented for easy restore) ============
+void fragment() {
     // Fresnel for rim lighting - key to the metaball look
     float fresnel = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), rim_power);
 
@@ -60,3 +82,5 @@ void fragment() {
     ROUGHNESS = 0.4;
     SPECULAR = 0.5;
 }
+// ============ END ORIGINAL ============
+*/
