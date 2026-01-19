@@ -68,29 +68,11 @@ var _pending_music_path: String = ""
 var _pending_music_is_menu: bool = false
 
 func _ready() -> void:
-	_debug_log("AudioManager._ready() starting")
-	DebugLoader.task_start("AudioManager.init")
-
-	DebugLoader.task_step("AudioManager.init", "Setting up audio buses")
 	_setup_audio_buses()
-
-	DebugLoader.task_step("AudioManager.init", "Setting up music players")
 	_setup_music_players()
-
-	DebugLoader.task_step("AudioManager.init", "Setting up SFX pool (%d players)" % SFX_POOL_SIZE)
 	_setup_sfx_pool()
-
-	DebugLoader.task_step("AudioManager.init", "Starting audio preload")
 	_preload_audio()
-
-	DebugLoader.task_step("AudioManager.init", "Connecting game signals")
 	_connect_game_signals()
-
-	_debug_log("AudioManager._ready() complete (SFX loading continues async)")
-
-func _debug_log(message: String) -> void:
-	if DebugLoader:
-		DebugLoader._log("[AudioManager] " + message)
 
 
 func _setup_audio_buses() -> void:
@@ -142,25 +124,20 @@ func _preload_audio() -> void:
 	# Start loading menu music in background (non-blocking)
 	if ResourceLoader.exists(MENU_MUSIC):
 		ResourceLoader.load_threaded_request(MENU_MUSIC)
-		_debug_log("Requested threaded load: menu music")
 
 	# Load SFX gradually (one per frame) to avoid blocking
 	_sfx_keys = SFX.keys()
 	_sfx_load_index = 0
-	_debug_log("Starting SFX preload (%d files)" % _sfx_keys.size())
 	if not _sfx_keys.is_empty():
 		call_deferred("_load_next_sfx")
 	else:
 		# No SFX to load, signal ready immediately
 		is_audio_loaded = true
-		DebugLoader.task_end("AudioManager.init", "No SFX to load")
 		call_deferred("emit_signal", "audio_loaded")
 
 func _load_next_sfx() -> void:
 	if _sfx_load_index >= _sfx_keys.size():
 		is_audio_loaded = true
-		_debug_log("All SFX loaded (%d files)" % _cached_sfx.size())
-		DebugLoader.task_end("AudioManager.init", "%d SFX loaded" % _cached_sfx.size())
 		audio_loaded.emit()
 		return
 
@@ -168,7 +145,6 @@ func _load_next_sfx() -> void:
 	var sfx_path: String = SFX[sfx_name]
 	if ResourceLoader.exists(sfx_path):
 		_cached_sfx[sfx_name] = load(sfx_path)
-		_debug_log("Loaded SFX %d/%d: %s" % [_sfx_load_index + 1, _sfx_keys.size(), sfx_name])
 
 	_sfx_load_index += 1
 
@@ -177,8 +153,6 @@ func _load_next_sfx() -> void:
 		call_deferred("_load_next_sfx")
 	else:
 		is_audio_loaded = true
-		_debug_log("All SFX loaded (%d files)" % _cached_sfx.size())
-		DebugLoader.task_end("AudioManager.init", "%d SFX loaded" % _cached_sfx.size())
 		audio_loaded.emit()
 
 func _connect_game_signals() -> void:

@@ -43,9 +43,6 @@ var _hint_label: Label = null
 var _loading_title: Label = null
 
 func _ready() -> void:
-	DebugLoader.set_phase("title_screen")
-	DebugLoader._log("[TitleScreen] _ready() - showing start prompt")
-
 	# Start menu music (deferred to ensure AudioManager is ready)
 	call_deferred("_start_menu_music")
 
@@ -54,10 +51,7 @@ func _ready() -> void:
 
 	# Connect to loading signals for hint screen (if player starts before load completes)
 	if not Preloader.is_everything_ready:
-		DebugLoader._log("[TitleScreen] Preloader not ready, waiting for everything_ready signal")
 		Preloader.everything_ready.connect(_on_everything_ready, CONNECT_ONE_SHOT)
-	else:
-		DebugLoader._log("[TitleScreen] Preloader already ready")
 
 func _start_menu_music() -> void:
 	AudioManager.play_menu_music()
@@ -105,8 +99,6 @@ func _open_settings() -> void:
 	get_tree().change_scene_to_file("res://scenes/settings.tscn")
 
 func _start_game_loading() -> void:
-	DebugLoader._log("[TitleScreen] Player pressed SPACE - starting game loading")
-	DebugLoader.set_phase("loading")
 	_load_state = LoadState.STARTING
 	_hint_timer = 0.0
 	_flash_timer = 0.0
@@ -189,7 +181,5 @@ func _update_loading_screen(delta: float) -> void:
 		_do_transition()
 
 func _do_transition() -> void:
-	DebugLoader._log("[TitleScreen] Transitioning to game scene")
-	DebugLoader.set_phase("game")
 	_load_state = LoadState.TRANSITIONING
 	GameManager.start_game()

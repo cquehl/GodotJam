@@ -48,9 +48,6 @@ signal power_up_ended
 signal immunity_ended
 signal game_over_triggered
 
-func _ready() -> void:
-	DebugLoader._log("[GameManager] _ready() - state initialized")
-
 # =============================================================================
 # METHODS
 # =============================================================================
@@ -123,9 +120,6 @@ func game_over() -> void:
 	_transitioning = false
 
 func start_game() -> void:
-	DebugLoader._log("[GameManager] start_game() called")
-	DebugLoader.task_start("GameManager.start_game")
-
 	_transitioning = false
 	reset_score()
 	game_time = 0.0
@@ -136,20 +130,17 @@ func start_game() -> void:
 	immune_timer = 0.0
 
 	# Log game start for debugging
-	DebugLoader.log_game_start()
+	var debug_loader := get_node_or_null("/root/DebugLoader")
+	if debug_loader and debug_loader.has_method("log_game_start"):
+		debug_loader.log_game_start()
 
 	# Clear any leftover droplets
 	if DropletPool.is_ready():
 		DropletPool.clear_active_droplets()
-		DebugLoader._log("[GameManager] Cleared active droplets")
 
 	# Use preloaded scene if available
 	if Preloader.is_game_scene_ready:
-		DebugLoader._log("[GameManager] Using preloaded game scene")
 		var scene := Preloader.get_game_scene()
 		get_tree().change_scene_to_packed(scene)
 	else:
-		DebugLoader._log("[GameManager] WARN: Fallback to file-based scene load")
 		get_tree().change_scene_to_file("res://scenes/game_3d.tscn")
-
-	DebugLoader.task_end("GameManager.start_game")
