@@ -28,7 +28,7 @@ var _current_material: ShaderMaterial = null
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var shadow: MeshInstance3D = $Shadow
-@onready var trail_particles: GPUParticles3D = $Mesh/TrailParticles
+@onready var trail_particles: CPUParticles3D = $Mesh/TrailParticles
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
 # Cached materials for quick switching
