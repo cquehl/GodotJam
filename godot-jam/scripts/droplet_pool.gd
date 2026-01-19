@@ -16,6 +16,8 @@ var _available_pool: Array[Node] = []
 var _active_droplets: Array[Node] = []
 var _pool_parent: Node = null
 var _is_initialized: bool = false
+var _is_initializing: bool = false
+var _init_count: int = 0
 
 # Preloaded shaders for quick material setup
 var water_shader: Shader = null
@@ -27,11 +29,16 @@ func _ready() -> void:
 	pass
 
 ## Initialize pool on-demand (called from get_droplet or explicitly)
+## This starts gradual initialization - one droplet per frame to avoid blocking
 func ensure_initialized() -> void:
-	if not _is_initialized:
-		_initialize_pool()
+	if _is_initialized or _is_initializing:
+		return
+	_start_gradual_init()
 
-func _initialize_pool() -> void:
+func _start_gradual_init() -> void:
+	_is_initializing = true
+	_init_count = 0
+
 	# Try to get scene from preloader (may not be ready yet since it loads async)
 	# Falls back to synchronous load if preloader hasn't finished
 	if Preloader.is_resource_loaded(WATER_DROPLET_PATH):
@@ -48,12 +55,27 @@ func _initialize_pool() -> void:
 	_pool_parent.name = "DropletPoolStorage"
 	add_child(_pool_parent)
 
-	# Pre-instantiate droplets
-	for i in INITIAL_POOL_SIZE:
-		_create_pooled_droplet()
+	# Start creating droplets one per frame
+	call_deferred("_create_next_pooled_droplet")
 
-	_is_initialized = true
-	pool_ready.emit()
+func _create_next_pooled_droplet() -> void:
+	if _init_count >= INITIAL_POOL_SIZE:
+		# Done initializing
+		_is_initialized = true
+		_is_initializing = false
+		pool_ready.emit()
+		return
+
+	_create_pooled_droplet()
+	_init_count += 1
+
+	# Schedule next droplet creation
+	if _init_count < INITIAL_POOL_SIZE:
+		call_deferred("_create_next_pooled_droplet")
+	else:
+		_is_initialized = true
+		_is_initializing = false
+		pool_ready.emit()
 
 func _create_pooled_droplet() -> Node:
 	var droplet := _droplet_scene.instantiate()
@@ -66,9 +88,16 @@ func _create_pooled_droplet() -> Node:
 
 ## Get a droplet from the pool
 func get_droplet() -> Node:
-	# Initialize on first use (deferred from startup for faster loading)
+	# If pool not ready, create a one-off droplet (rare fallback)
 	if not _is_initialized:
-		_initialize_pool()
+		if not _is_initializing:
+			ensure_initialized()
+		# Create a temporary droplet while pool initializes
+		if _droplet_scene == null:
+			_droplet_scene = load(WATER_DROPLET_PATH)
+		var temp_droplet := _droplet_scene.instantiate()
+		temp_droplet.activate()
+		return temp_droplet
 
 	var droplet: Node = null
 

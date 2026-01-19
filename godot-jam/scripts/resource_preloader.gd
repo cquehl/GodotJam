@@ -104,14 +104,13 @@ func _compile_next_shader() -> void:
 		_on_shaders_compiled()
 
 func _on_shaders_compiled() -> void:
-	# Initialize DropletPool now that shaders are ready
-	if not is_pool_ready:
-		DropletPool.ensure_initialized()
-		is_pool_ready = true
+	# Initialize DropletPool now that shaders are ready (gradual, one droplet per frame)
+	if not is_pool_ready and not DropletPool.is_ready():
 		DropletPool.pool_ready.connect(_on_pool_ready, CONNECT_ONE_SHOT)
-		# If pool initialization is synchronous, it's already ready
-		if DropletPool.is_ready():
-			_on_pool_ready()
+		DropletPool.ensure_initialized()
+	elif DropletPool.is_ready():
+		# Pool already initialized
+		_on_pool_ready()
 
 func _on_pool_ready() -> void:
 	is_pool_ready = true
